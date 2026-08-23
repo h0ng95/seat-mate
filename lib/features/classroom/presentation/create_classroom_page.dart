@@ -10,6 +10,7 @@ import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/app_text_field.dart';
 import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/primary_button.dart';
+import '../../../shared/presentation/separated_digits_input_formatter.dart';
 import '../../character/presentation/pixel_character.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/presentation/kakao_login_button.dart';
@@ -137,7 +138,13 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
                     label: '양력 생년월일',
                     hintText: '1995-06-12',
                     controller: _birthController,
-                    keyboardType: TextInputType.datetime,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: const [
+                      SeparatedDigitsInputFormatter(
+                        groupLengths: [4, 2, 2],
+                        separator: '-',
+                      ),
+                    ],
                     validator: _validateBirthDate,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -145,7 +152,13 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
                     label: '출생시간 (선택)',
                     hintText: '09:30 · 모르면 비워두세요',
                     controller: _birthTimeController,
-                    keyboardType: TextInputType.datetime,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: const [
+                      SeparatedDigitsInputFormatter(
+                        groupLengths: [2, 2],
+                        separator: ':',
+                      ),
+                    ],
                     validator: _validateBirthTime,
                   ),
                   const SizedBox(height: AppSpacing.lg),

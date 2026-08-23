@@ -8,6 +8,7 @@ import '../../../../core/values/local_date.dart';
 import '../../../../core/values/nickname.dart';
 import '../../../../shared/presentation/app_text_field.dart';
 import '../../../../shared/presentation/primary_button.dart';
+import '../../../../shared/presentation/separated_digits_input_formatter.dart';
 import '../../application/classroom_providers.dart';
 import '../../domain/birth_profile.dart';
 import '../../domain/classroom_repository.dart';
@@ -110,7 +111,13 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
               label: '양력 생년월일',
               hintText: '1996-03-17',
               controller: _birthController,
-              keyboardType: TextInputType.datetime,
+              keyboardType: TextInputType.number,
+              inputFormatters: const [
+                SeparatedDigitsInputFormatter(
+                  groupLengths: [4, 2, 2],
+                  separator: '-',
+                ),
+              ],
               validator: _validateBirthDate,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -118,7 +125,13 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
               label: '출생시간 (선택)',
               hintText: '09:30 · 모르면 비워두세요',
               controller: _birthTimeController,
-              keyboardType: TextInputType.datetime,
+              keyboardType: TextInputType.number,
+              inputFormatters: const [
+                SeparatedDigitsInputFormatter(
+                  groupLengths: [2, 2],
+                  separator: ':',
+                ),
+              ],
               validator: _validateBirthTime,
             ),
             if (errorMessage != null) ...[

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -6,6 +7,7 @@ class AppTextField extends StatelessWidget {
     this.hintText,
     this.controller,
     this.keyboardType,
+    this.inputFormatters,
     this.validator,
     this.onFieldSubmitted,
     super.key,
@@ -15,6 +17,7 @@ class AppTextField extends StatelessWidget {
   final String? hintText;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onFieldSubmitted;
 
@@ -23,6 +26,7 @@ class AppTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       validator: validator,
       onFieldSubmitted: onFieldSubmitted,
       textInputAction: TextInputAction.next,
