@@ -2,6 +2,7 @@ import '../../../core/hashing/canonical_seed.dart';
 import '../../../core/hashing/stable_hash.dart';
 import '../../../core/values/nickname.dart';
 import 'birth_profile.dart';
+import 'classroom_seat_layout.dart';
 import 'relationship.dart';
 import 'saju_chart.dart';
 import 'saju_compatibility.dart';
@@ -105,7 +106,7 @@ class MemberResult {
 class SeatMateAlgorithmV1 {
   const SeatMateAlgorithmV1();
 
-  static const version = 2;
+  static const version = 3;
 
   OwnerResult deriveOwner(BirthProfile birth) {
     final chart = SajuChartCalculator().calculate(birth);
@@ -117,10 +118,10 @@ class SeatMateAlgorithmV1 {
       _ => OwnerProfileType.back,
     };
     final candidates = switch (profile) {
-      OwnerProfileType.window => [3, 0, 6, 4],
-      OwnerProfileType.center => [4, 1, 7, 3, 5],
-      OwnerProfileType.back => [7, 6, 8, 4],
-      OwnerProfileType.front => [1, 0, 2, 4],
+      OwnerProfileType.window => [4, 0, 8, 5],
+      OwnerProfileType.center => [5, 6, 1, 2, 9, 10, 4, 7],
+      OwnerProfileType.back => [9, 10, 8, 11, 5, 6],
+      OwnerProfileType.front => [1, 2, 0, 3, 5, 6],
     };
     final seatSeed = _seed('owner-seat', {
       'ownerBirth': birth.canonical,
@@ -142,7 +143,7 @@ class SeatMateAlgorithmV1 {
     required BirthProfile memberBirth,
     Set<int> occupiedSeats = const {},
   }) {
-    if (ownerSeatIndex < 0 || ownerSeatIndex > 8) {
+    if (!ClassroomSeatLayout.isValid(ownerSeatIndex)) {
       throw ArgumentError.value(ownerSeatIndex, 'ownerSeatIndex');
     }
     final fields = {
@@ -160,6 +161,7 @@ class SeatMateAlgorithmV1 {
     final preferredSeats = _rankSeats(
       relationship: relationship,
       ownerSeat: ownerSeatIndex,
+      heartScore: compatibility.heartScore,
       fields: fields,
     );
     final unavailable = {...occupiedSeats, ownerSeatIndex};
@@ -191,10 +193,11 @@ class SeatMateAlgorithmV1 {
   List<int> _rankSeats({
     required RelationshipType relationship,
     required int ownerSeat,
+    required int heartScore,
     required Map<String, String> fields,
   }) {
     final seats = [
-      for (var seat = 0; seat < 9; seat++)
+      for (var seat = 0; seat < ClassroomSeatLayout.capacity; seat++)
         if (seat != ownerSeat) seat,
     ];
     seats.sort((first, second) {
@@ -202,7 +205,8 @@ class SeatMateAlgorithmV1 {
         relationship,
         ownerSeat,
         second,
-      ).compareTo(_seatScore(relationship, ownerSeat, first));
+        heartScore,
+      ).compareTo(_seatScore(relationship, ownerSeat, first, heartScore));
       if (scoreComparison != 0) return scoreComparison;
       final firstTie = StableHash.uint32(
         _seed('seat-order', {...fields, 'seat': '$first'}),
@@ -216,37 +220,74 @@ class SeatMateAlgorithmV1 {
     return List.unmodifiable(seats);
   }
 
-  int _seatScore(RelationshipType type, int ownerSeat, int seat) {
-    final ownerRow = ownerSeat ~/ 3;
-    final ownerColumn = ownerSeat % 3;
-    final row = seat ~/ 3;
-    final column = seat % 3;
+  int _seatScore(
+    RelationshipType type,
+    int ownerSeat,
+    int seat,
+    int heartScore,
+  ) {
+    final ownerRow = ClassroomSeatLayout.rowOf(ownerSeat);
+    final ownerDivision = ClassroomSeatLayout.divisionOf(ownerSeat);
+    final ownerSide = ClassroomSeatLayout.sideOf(ownerSeat);
+    final row = ClassroomSeatLayout.rowOf(seat);
+    final division = ClassroomSeatLayout.divisionOf(seat);
+    final side = ClassroomSeatLayout.sideOf(seat);
     final rowDelta = row - ownerRow;
-    final columnDelta = column - ownerColumn;
+    final divisionDelta = division - ownerDivision;
     final rowDistance = rowDelta.abs();
-    final columnDistance = columnDelta.abs();
+    final divisionDistance = divisionDelta.abs();
+    final sideDistance = (side - ownerSide).abs();
+    final physicalColumn = division * 3 + side;
+    final ownerPhysicalColumn = ownerDivision * 3 + ownerSide;
+    final columnDistance = (physicalColumn - ownerPhysicalColumn).abs();
     final manhattan = rowDistance + columnDistance;
-    final side = rowDelta == 0 && columnDistance == 1;
-    final diagonal = rowDistance == 1 && columnDistance == 1;
+    final sameDesk = ClassroomSeatLayout.shareDesk(ownerSeat, seat);
+    final sameColumn = division == ownerDivision && side == ownerSide;
+    final sameRowOtherDivision = rowDelta == 0 && divisionDistance == 1;
+    final diagonal = rowDistance == 1 && columnDistance <= 2;
+    final partnerBonus = sameDesk
+        ? switch (heartScore) {
+            >= 75 => 220,
+            >= 68 => 100,
+            >= 60 => 20,
+            _ => -80,
+          }
+        : 0;
 
-    return switch (type) {
-      RelationshipType.buddy => side ? 100 : (diagonal ? 80 : 20 - manhattan),
+    final relationshipScore = switch (type) {
+      RelationshipType.buddy =>
+        sameDesk ? 140 : (diagonal ? 80 : 30 - manhattan * 4),
       RelationshipType.chatter =>
-        rowDelta > 0 && diagonal ? 100 : (rowDelta > 0 ? 80 + row : 20),
+        sameDesk
+            ? 120
+            : (rowDelta > 0 && diagonal ? 100 : (rowDelta > 0 ? 80 + row : 20)),
       RelationshipType.leader =>
-        rowDelta < 0 && columnDelta == 0 ? 100 : (rowDelta < 0 ? 80 : 20 - row),
+        rowDelta < 0 && sameColumn ? 110 : (rowDelta < 0 ? 80 : 25 - row * 3),
       RelationshipType.rival =>
-        columnDelta == 0 ? 70 + rowDistance * 10 : 30 + manhattan * 5,
-      RelationshipType.emergency => diagonal ? 100 : (manhattan == 1 ? 75 : 20),
+        sameRowOtherDivision
+            ? 105
+            : (sameColumn ? 75 + rowDistance * 10 : 35 + manhattan * 4),
+      RelationshipType.emergency =>
+        diagonal ? 105 : (sameDesk || manhattan <= 2 ? 75 : 25),
       RelationshipType.accomplice =>
-        rowDelta > 0 && columnDelta == 0 ? 100 : (rowDelta > 0 ? 80 + row : 20),
+        sameDesk
+            ? 115
+            : (rowDelta > 0 && division == ownerDivision
+                  ? 100
+                  : (rowDelta > 0 ? 80 + row : 20)),
       RelationshipType.quietBestie =>
-        column == 0 ? 80 + manhattan * 5 : 30 + manhattan * 4,
-      RelationshipType.moodMaker => column == 2 ? 90 + row : 30 + row,
+        division == 0 && side == 0 ? 85 + manhattan * 4 : 35 + manhattan * 3,
+      RelationshipType.moodMaker =>
+        division == 1 && side == 1 ? 95 + row : 35 + row,
       RelationshipType.caretaker =>
-        rowDelta < 0 && diagonal ? 100 : (rowDelta < 0 || side ? 75 : 20),
-      RelationshipType.transfer => 30 + manhattan * 20,
+        sameDesk
+            ? 105
+            : (rowDelta < 0 && diagonal
+                  ? 100
+                  : (rowDelta < 0 || sideDistance == 1 ? 75 : 20)),
+      RelationshipType.transfer => 30 + manhattan * 15,
     };
+    return relationshipScore + partnerBonus;
   }
 
   String _seed(String purpose, Map<String, String> fields) {

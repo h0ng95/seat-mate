@@ -40,27 +40,30 @@ void main() {
     expect(result.classroom.members, hasLength(5));
   });
 
-  test('blocks a tenth member when all nine seats are occupied', () async {
-    final repository = FakeClassroomRepository();
-    for (var index = 0; index < 5; index++) {
-      await repository.joinClassroom(
-        JoinClassroomCommand(
-          shareCode: 'preview',
-          name: Nickname('친구$index'),
-          birth: BirthProfile(date: LocalDate(2000, 1, index + 1)),
-        ),
-      );
-    }
+  test(
+    'blocks a thirteenth member when all twelve seats are occupied',
+    () async {
+      final repository = FakeClassroomRepository();
+      for (var index = 0; index < 8; index++) {
+        await repository.joinClassroom(
+          JoinClassroomCommand(
+            shareCode: 'preview',
+            name: Nickname('친구$index'),
+            birth: BirthProfile(date: LocalDate(2000, 1, index + 1)),
+          ),
+        );
+      }
 
-    expect(
-      () => repository.joinClassroom(
-        JoinClassroomCommand(
-          shareCode: 'preview',
-          name: Nickname('열번째'),
-          birth: BirthProfile(date: LocalDate.parseIso('2001-01-01')),
+      expect(
+        () => repository.joinClassroom(
+          JoinClassroomCommand(
+            shareCode: 'preview',
+            name: Nickname('열세번째'),
+            birth: BirthProfile(date: LocalDate.parseIso('2001-01-01')),
+          ),
         ),
-      ),
-      throwsA(isA<ClassroomFullException>()),
-    );
-  });
+        throwsA(isA<ClassroomFullException>()),
+      );
+    },
+  );
 }

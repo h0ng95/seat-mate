@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../character/presentation/pixel_character.dart';
+import '../../domain/classroom_seat_layout.dart';
 
 class SeatAssignmentAnimation extends StatelessWidget {
   const SeatAssignmentAnimation({
@@ -21,22 +22,25 @@ class SeatAssignmentAnimation extends StatelessWidget {
       child: IgnorePointer(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final gridLeft = constraints.maxWidth * 0.085;
-            final gridTop = constraints.maxHeight * 0.28;
-            const gridHorizontalGap = 5.0;
-            const gridVerticalGap = 5.0;
+            final gridLeft = constraints.maxWidth * 0.055;
+            final gridTop = constraints.maxHeight * 0.29;
+            const deskHorizontalGap = 16.0;
+            const deskVerticalGap = 3.0;
             final gridWidth = constraints.maxWidth - gridLeft * 2;
-            final gridHeight = constraints.maxHeight * 0.48;
-            final cellWidth = (gridWidth - gridHorizontalGap * 2) / 3;
-            final cellHeight = (gridHeight - gridVerticalGap * 2) / 3;
-            final column = seatIndex % 3;
-            final row = seatIndex ~/ 3;
+            final deskWidth = (gridWidth - deskHorizontalGap) / 2;
+            final deskHeight = deskWidth / 2.05;
+            final row = ClassroomSeatLayout.rowOf(seatIndex);
+            final rowFromBack = ClassroomSeatLayout.rowCount - 1 - row;
+            final division = ClassroomSeatLayout.divisionOf(seatIndex);
+            final side = ClassroomSeatLayout.sideOf(seatIndex);
+            final halfDeskWidth = deskWidth / 2;
             final target = Offset(
               gridLeft +
-                  column * (cellWidth + gridHorizontalGap) +
-                  cellWidth / 2 -
+                  division * (deskWidth + deskHorizontalGap) +
+                  side * halfDeskWidth +
+                  halfDeskWidth / 2 -
                   18,
-              gridTop + row * (cellHeight + gridVerticalGap) + 4,
+              gridTop + rowFromBack * (deskHeight + deskVerticalGap) + 4,
             );
             final start = Offset(
               constraints.maxWidth * 0.88,

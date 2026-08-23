@@ -53,10 +53,10 @@ void main() {
       ownerSajuChart: ownerChart,
       memberName: memberName,
       memberBirth: memberBirth,
-      occupiedSeats: {0, 1, 2, 3, 4, 5, 6},
+      occupiedSeats: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
     );
 
-    expect(result.seatIndex, anyOf(7, 8));
+    expect(result.seatIndex, anyOf(10, 11));
   });
 
   test('relationship compatibility is derived from the two saju charts', () {
@@ -74,7 +74,7 @@ void main() {
     expect(result.compatibility.evidence, hasLength(4));
   });
 
-  test('rejects a tenth person when every seat is occupied', () {
+  test('rejects a thirteenth person when every seat is occupied', () {
     expect(
       () => algorithm.deriveMember(
         classroomCode: '8fj2kd9abc',
@@ -83,7 +83,7 @@ void main() {
         ownerSajuChart: ownerChart,
         memberName: memberName,
         memberBirth: memberBirth,
-        occupiedSeats: {0, 1, 2, 3, 4, 5, 6, 7, 8},
+        occupiedSeats: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
       ),
       throwsStateError,
     );

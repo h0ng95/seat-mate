@@ -6,11 +6,14 @@ import '../models/classroom_scene_member.dart';
 
 enum SeatIdleMotion { none, bob, lookLeft, lookRight, emote }
 
+enum DeskSeatSide { left, right }
+
 class ClassroomSeat extends StatefulWidget {
   const ClassroomSeat({
     required this.seatIndex,
     required this.member,
     required this.onTap,
+    required this.deskSide,
     this.idleMotion = SeatIdleMotion.none,
     this.emote,
     super.key,
@@ -19,6 +22,7 @@ class ClassroomSeat extends StatefulWidget {
   final int seatIndex;
   final ClassroomSceneMember? member;
   final VoidCallback? onTap;
+  final DeskSeatSide deskSide;
   final SeatIdleMotion idleMotion;
   final String? emote;
 
@@ -107,8 +111,10 @@ class _ClassroomSeatState extends State<ClassroomSeat> {
                           ),
                         ),
                       ),
-                    const Positioned.fill(
-                      child: CustomPaint(painter: _DeskPainter()),
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _DeskPainter(widget.deskSide),
+                      ),
                     ),
                     if (person != null)
                       Positioned(
@@ -390,7 +396,9 @@ class _ChairBack extends StatelessWidget {
 }
 
 class _DeskPainter extends CustomPainter {
-  const _DeskPainter();
+  const _DeskPainter(this.side);
+
+  final DeskSeatSide side;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -400,49 +408,93 @@ class _DeskPainter extends CustomPainter {
     final edge = Paint()..color = const Color(0xFFA75E37);
     final shine = Paint()..color = const Color(0xFFE7AA6D);
 
+    final isLeft = side == DeskSeatSide.left;
+    final topLeft = isLeft ? 9.0 : -1.0;
+    final topRight = isLeft ? size.width + 1 : size.width - 9;
+    final bottomLeft = isLeft ? 3.0 : -1.0;
+    final bottomRight = isLeft ? size.width + 1 : size.width - 3;
+    final insetLeft = isLeft ? 11.0 : 0.0;
+    final insetRight = isLeft ? size.width + 1 : size.width - 11;
+    final insetBottomLeft = isLeft ? 6.0 : 0.0;
+    final insetBottomRight = isLeft ? size.width + 1 : size.width - 6;
+    final bodyLeft = isLeft ? 5.0 : 0.0;
+    final bodyRight = isLeft ? size.width + 1 : size.width - 5;
+    final bodyInsetLeft = isLeft ? 8.0 : 0.0;
+    final bodyInsetRight = isLeft ? size.width + 1 : size.width - 8;
+
     canvas.drawOval(
-      Rect.fromLTWH(8, size.height * 0.61, size.width - 12, size.height * 0.28),
+      Rect.fromLTRB(
+        isLeft ? 8 : 0,
+        size.height * 0.61,
+        isLeft ? size.width + 2 : size.width - 4,
+        size.height * 0.89,
+      ),
       shadow,
     );
 
     final topPath = Path()
-      ..moveTo(9, size.height * 0.47)
-      ..lineTo(size.width - 9, size.height * 0.47)
-      ..lineTo(size.width - 3, size.height * 0.68)
-      ..lineTo(3, size.height * 0.68)
+      ..moveTo(topLeft, size.height * 0.47)
+      ..lineTo(topRight, size.height * 0.47)
+      ..lineTo(bottomRight, size.height * 0.68)
+      ..lineTo(bottomLeft, size.height * 0.68)
       ..close();
     canvas.drawPath(topPath, outline);
 
     final insetTop = Path()
-      ..moveTo(11, size.height * 0.49)
-      ..lineTo(size.width - 11, size.height * 0.49)
-      ..lineTo(size.width - 6, size.height * 0.64)
-      ..lineTo(6, size.height * 0.64)
+      ..moveTo(insetLeft, size.height * 0.49)
+      ..lineTo(insetRight, size.height * 0.49)
+      ..lineTo(insetBottomRight, size.height * 0.64)
+      ..lineTo(insetBottomLeft, size.height * 0.64)
       ..close();
     canvas.drawPath(insetTop, top);
     canvas.drawRect(
-      Rect.fromLTWH(9, size.height * 0.51, size.width - 18, 2),
+      Rect.fromLTRB(
+        isLeft ? 9 : 0,
+        size.height * 0.51,
+        isLeft ? size.width + 1 : size.width - 9,
+        size.height * 0.51 + 2,
+      ),
       shine,
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(5, size.height * 0.67, size.width - 10, size.height * 0.17),
+      Rect.fromLTRB(
+        bodyLeft,
+        size.height * 0.67,
+        bodyRight,
+        size.height * 0.84,
+      ),
       outline,
     );
     canvas.drawRect(
-      Rect.fromLTWH(8, size.height * 0.68, size.width - 16, size.height * 0.12),
+      Rect.fromLTRB(
+        bodyInsetLeft,
+        size.height * 0.68,
+        bodyInsetRight,
+        size.height * 0.80,
+      ),
       edge,
     );
-    canvas.drawRect(
-      Rect.fromLTWH(9, size.height * 0.82, 5, size.height * 0.09),
-      outline,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(size.width - 14, size.height * 0.82, 5, size.height * 0.09),
-      outline,
-    );
+    if (isLeft) {
+      canvas.drawRect(
+        Rect.fromLTWH(9, size.height * 0.82, 5, size.height * 0.09),
+        outline,
+      );
+    } else {
+      canvas.drawRect(
+        Rect.fromLTWH(
+          size.width - 14,
+          size.height * 0.82,
+          5,
+          size.height * 0.09,
+        ),
+        outline,
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _DeskPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DeskPainter oldDelegate) {
+    return oldDelegate.side != side;
+  }
 }

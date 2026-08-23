@@ -1,5 +1,6 @@
 import '../../../core/values/nickname.dart';
 import 'birth_profile.dart';
+import 'classroom_seat_layout.dart';
 import 'relationship.dart';
 import 'saju_chart.dart';
 import 'saju_compatibility.dart';
@@ -56,7 +57,7 @@ class Classroom {
   final List<ClassroomMember> members;
   final int algorithmVersion;
 
-  bool get isFull => members.length >= 9;
+  bool get isFull => members.length >= ClassroomSeatLayout.capacity;
 
   Classroom copyWith({List<ClassroomMember>? members}) {
     return Classroom(

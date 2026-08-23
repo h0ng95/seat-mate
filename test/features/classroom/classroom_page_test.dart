@@ -10,7 +10,9 @@ import 'package:seat_mate/features/sharing/application/share_providers.dart';
 import 'package:seat_mate/features/sharing/application/share_service.dart';
 
 void main() {
-  testWidgets('renders nine classroom seats at mobile width', (tester) async {
+  testWidgets('renders twelve paired classroom seats at mobile width', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -23,10 +25,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    for (var index = 0; index < 9; index++) {
+    for (var index = 0; index < 12; index++) {
       expect(find.byKey(ValueKey('seat-$index')), findsOneWidget);
     }
-    expect(find.byKey(const ValueKey('heart-score-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('heart-score-4')), findsOneWidget);
     expect(find.text('우리 반 케미 순위'), findsOneWidget);
     expect(find.byKey(const ValueKey('compatibility-rank-1')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -47,7 +49,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('seat-5')));
+    await tester.tap(find.byKey(const ValueKey('seat-4')));
     await tester.pumpAndSettle();
 
     expect(find.text('케미 지수'), findsOneWidget);
@@ -74,14 +76,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump();
 
-    expect(find.byKey(const ValueKey('seat-emote-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('seat-emote-1')), findsOneWidget);
     expect(find.text('😊'), findsOneWidget);
     expect(find.byKey(const ValueKey('seat-0')), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1100));
     await tester.pump();
 
-    expect(find.byKey(const ValueKey('seat-emote-0')), findsNothing);
+    expect(find.byKey(const ValueKey('seat-emote-1')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

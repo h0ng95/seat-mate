@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../app/app_colors.dart';
+import '../../domain/classroom_seat_layout.dart';
 import '../models/classroom_scene_member.dart';
 import 'classroom_seat.dart';
 import 'seat_assignment_animation.dart';
@@ -147,7 +148,7 @@ class _ClassroomSceneState extends State<ClassroomScene> {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/classroom-room-v5.png',
+                    'assets/images/classroom-room-v6.png',
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.none,
                     semanticLabel: '나무 바닥과 칠판, 창문, 책장이 있는 도트 교실',
@@ -176,33 +177,45 @@ class _ClassroomSceneState extends State<ClassroomScene> {
                   ),
                 ),
                 Positioned(
-                  left: constraints.maxWidth * 0.085,
-                  right: constraints.maxWidth * 0.085,
-                  top: constraints.maxHeight * 0.28,
-                  bottom: constraints.maxHeight * 0.24,
+                  left: constraints.maxWidth * 0.055,
+                  right: constraints.maxWidth * 0.055,
+                  top: constraints.maxHeight * 0.29,
+                  bottom: constraints.maxHeight * 0.23,
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.zero,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 5,
-                          mainAxisSpacing: 5,
-                          childAspectRatio: 1.32,
+                          crossAxisCount: ClassroomSeatLayout.divisionCount,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 3,
+                          childAspectRatio: 2.05,
                         ),
-                    itemCount: 9,
-                    itemBuilder: (context, index) {
-                      final member = _memberAt(index);
-                      return ClassroomSeat(
-                        seatIndex: index,
-                        member: member,
-                        idleMotion: _activeSeatIndex == index
-                            ? _activeMotion
-                            : SeatIdleMotion.none,
-                        emote: _activeSeatIndex == index ? _activeEmote : null,
-                        onTap: member == null
-                            ? null
-                            : () => widget.onMemberTap(member),
+                    itemCount: ClassroomSeatLayout.deskCount,
+                    itemBuilder: (context, deskIndex) {
+                      final rowFromBack = deskIndex ~/ 2;
+                      final row =
+                          ClassroomSeatLayout.rowCount - 1 - rowFromBack;
+                      final division = deskIndex % 2;
+                      final firstSeat = ClassroomSeatLayout.firstSeatOfDesk(
+                        row: row,
+                        division: division,
+                      );
+                      return KeyedSubtree(
+                        key: ValueKey('desk-$row-$division'),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildSeat(firstSeat, DeskSeatSide.left),
+                            ),
+                            Expanded(
+                              child: _buildSeat(
+                                firstSeat + 1,
+                                DeskSeatSide.right,
+                              ),
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -218,6 +231,20 @@ class _ClassroomSceneState extends State<ClassroomScene> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSeat(int seatIndex, DeskSeatSide deskSide) {
+    final member = _memberAt(seatIndex);
+    return ClassroomSeat(
+      seatIndex: seatIndex,
+      member: member,
+      deskSide: deskSide,
+      idleMotion: _activeSeatIndex == seatIndex
+          ? _activeMotion
+          : SeatIdleMotion.none,
+      emote: _activeSeatIndex == seatIndex ? _activeEmote : null,
+      onTap: member == null ? null : () => widget.onMemberTap(member),
     );
   }
 

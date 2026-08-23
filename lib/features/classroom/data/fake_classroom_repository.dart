@@ -125,7 +125,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       name: Nickname('재홍'),
       birthProfile: ownerBirth,
       sajuChart: ownerResult.sajuChart,
-      seatIndex: 4,
+      seatIndex: 5,
       characterSeed: '재홍|1995-06-12',
       focusDelta: 18,
       joyDelta: 74,
@@ -133,9 +133,9 @@ class FakeClassroomRepository implements ClassroomRepository {
       isOwner: true,
     );
     final memberData = [
-      ('지현', '1997-08-04', 0, 8, 20),
-      ('민수', '1996-03-17', 5, 14, 0),
-      ('현우', '1995-11-23', 7, null, null),
+      ('지현', '1997-08-04', 8, 8, 20),
+      ('민수', '1996-03-17', 4, 14, 0),
+      ('현우', '1995-11-23', 1, null, null),
     ];
     final members = memberData.indexed.map((entry) {
       final item = entry.$2;
@@ -171,7 +171,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       ownerName: owner.name,
       ownerBirthProfile: ownerBirth,
       ownerAlgorithmSeed: StableHash.hex('owner|${ownerBirth.canonical}'),
-      ownerSeatIndex: 4,
+      ownerSeatIndex: 5,
       members: [owner, ...members],
     );
   }

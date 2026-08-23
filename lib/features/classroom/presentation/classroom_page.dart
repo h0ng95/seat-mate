@@ -14,6 +14,7 @@ import '../../sharing/application/share_service.dart';
 import '../application/classroom_providers.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
+import '../domain/classroom_seat_layout.dart';
 import '../domain/relationship.dart';
 import '../domain/seat_mate_algorithm.dart';
 import 'models/classroom_scene_member.dart';
@@ -147,7 +148,7 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                                 child: Text(
                                   _enteringMember == null
                                       ? (_classroom.isFull
-                                            ? '아홉 인연이 모두 모였어요!'
+                                            ? '열두 인연이 모두 모였어요!'
                                             : '친구가 들어올 때마다 우리 사이 풀이가 열려요.')
                                       : '새로운 인연이 자리를 찾았어요!',
                                   key: ValueKey(
@@ -174,7 +175,7 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                               color: AppColors.coral,
                             ),
                             Text(
-                              '${_classroom.members.length} / 9',
+                              '${_classroom.members.length} / ${ClassroomSeatLayout.capacity}',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w900),
                             ),
@@ -335,14 +336,31 @@ class _ClassroomContentState extends State<_ClassroomContent> {
     int ownerSeat,
     int memberSeat,
   ) {
-    final rowDelta = memberSeat ~/ 3 - ownerSeat ~/ 3;
-    final columnDelta = memberSeat % 3 - ownerSeat % 3;
+    final rowDelta =
+        ClassroomSeatLayout.rowOf(memberSeat) -
+        ClassroomSeatLayout.rowOf(ownerSeat);
+    final divisionDelta =
+        ClassroomSeatLayout.divisionOf(memberSeat) -
+        ClassroomSeatLayout.divisionOf(ownerSeat);
+    final sideDelta =
+        ClassroomSeatLayout.sideOf(memberSeat) -
+        ClassroomSeatLayout.sideOf(ownerSeat);
     final owner = classroom.ownerName.display;
-    if (rowDelta == 0 && columnDelta == -1) return '$owner님의 왼쪽 자리';
-    if (rowDelta == 0 && columnDelta == 1) return '$owner님의 오른쪽 자리';
-    if (rowDelta == -1 && columnDelta == 0) return '$owner님의 앞자리';
-    if (rowDelta == 1 && columnDelta == 0) return '$owner님의 뒷자리';
-    if (rowDelta.abs() == 1 && columnDelta.abs() == 1) {
+    if (ClassroomSeatLayout.shareDesk(ownerSeat, memberSeat)) {
+      return '$owner님의 짝꿍';
+    }
+    if (rowDelta == 0 && divisionDelta != 0) {
+      return '$owner님과 같은 줄 옆 분단';
+    }
+    if (rowDelta == -1 && divisionDelta == 0 && sideDelta == 0) {
+      return '$owner님의 바로 앞자리';
+    }
+    if (rowDelta == 1 && divisionDelta == 0 && sideDelta == 0) {
+      return '$owner님의 바로 뒷자리';
+    }
+    if (rowDelta == -1 && divisionDelta == 0) return '$owner님의 앞자리';
+    if (rowDelta == 1 && divisionDelta == 0) return '$owner님의 뒷자리';
+    if (rowDelta.abs() == 1) {
       return '$owner님의 대각선 자리';
     }
     return '$owner님과 조금 먼 자리';

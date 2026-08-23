@@ -51,7 +51,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
           children: [
             Text('우리 반 완성!', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: AppSpacing.xs),
-            const Text('아홉 인연이 모두 모였어요. 이제 나만의 반을 만들어보세요.'),
+            const Text('열두 인연이 모두 모였어요. 이제 나만의 반을 만들어보세요.'),
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
               label: '내 반 만들기',

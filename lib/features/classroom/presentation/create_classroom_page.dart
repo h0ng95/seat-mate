@@ -14,6 +14,7 @@ import '../../character/presentation/pixel_character.dart';
 import '../application/classroom_providers.dart';
 import '../domain/birth_profile.dart';
 import '../domain/classroom_repository.dart';
+import '../domain/classroom_seat_layout.dart';
 import '../domain/saju_chart.dart';
 import '../domain/seat_mate_algorithm.dart';
 
@@ -330,8 +331,12 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
 
   String _seatDescription(int seatIndex) {
     const rows = ['앞줄', '가운데 줄', '뒷줄'];
-    const columns = ['창가', '가운데', '문 쪽'];
-    return '${columns[seatIndex % 3]} ${rows[seatIndex ~/ 3]} 자리';
+    const divisions = ['1분단', '2분단'];
+    const sides = ['왼쪽', '오른쪽'];
+    final row = ClassroomSeatLayout.rowOf(seatIndex);
+    final division = ClassroomSeatLayout.divisionOf(seatIndex);
+    final side = ClassroomSeatLayout.sideOf(seatIndex);
+    return '${seatIndex + 1}번 · ${rows[row]} ${divisions[division]} ${sides[side]} 자리';
   }
 }
 
