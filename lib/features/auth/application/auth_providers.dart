@@ -31,7 +31,6 @@ class AuthController extends Notifier<AsyncValue<void>?> {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.kakao,
         redirectTo: '$baseUrl$redirectPath',
-        scopes: 'profile_nickname',
       );
     });
   }
