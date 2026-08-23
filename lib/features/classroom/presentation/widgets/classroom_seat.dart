@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/app_colors.dart';
+import '../../../character/presentation/pixel_character.dart';
 import '../models/classroom_scene_member.dart';
 
 class ClassroomSeat extends StatelessWidget {
@@ -59,16 +60,9 @@ class ClassroomSeat extends StatelessWidget {
                       top: 2,
                       width: constraints.maxWidth * 0.63,
                       height: constraints.maxHeight * 0.55,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: person.color,
-                          border: Border.all(color: AppColors.ink, width: 1.5),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          color: AppColors.chalk,
-                        ),
+                      child: PixelCharacter(
+                        seed: person.characterSeed,
+                        semanticLabel: '${person.name} 도트 캐릭터',
                       ),
                     ),
                   Positioned(

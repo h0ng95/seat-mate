@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/app_colors.dart';
 import '../../../../app/app_spacing.dart';
+import '../../../character/presentation/pixel_character.dart';
 import '../models/classroom_scene_member.dart';
 
 Future<void> showMemberResultSheet(
@@ -49,12 +50,12 @@ class MemberResultSheet extends StatelessWidget {
             ),
             Row(
               children: [
-                CircleAvatar(
-                  radius: 27,
-                  backgroundColor: member.color,
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: AppColors.chalk,
+                SizedBox(
+                  width: 54,
+                  height: 66,
+                  child: PixelCharacter(
+                    seed: member.characterSeed,
+                    semanticLabel: '${member.name} 도트 캐릭터',
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),

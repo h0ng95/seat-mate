@@ -10,6 +10,7 @@ class ClassroomSceneMember {
     required this.focusDelta,
     required this.joyDelta,
     required this.color,
+    required this.characterSeed,
     this.isOwner = false,
   });
 
@@ -21,5 +22,6 @@ class ClassroomSceneMember {
   final int focusDelta;
   final int joyDelta;
   final Color color;
+  final String characterSeed;
   final bool isOwner;
 }

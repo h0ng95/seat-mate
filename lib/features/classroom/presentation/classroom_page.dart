@@ -21,6 +21,7 @@ class ClassroomPage extends StatelessWidget {
       focusDelta: 62,
       joyDelta: 41,
       color: Color(0xFF6F9E86),
+      characterSeed: '지현|1997-08-04',
     ),
     ClassroomSceneMember(
       name: '재홍',
@@ -31,6 +32,7 @@ class ClassroomPage extends StatelessWidget {
       focusDelta: 18,
       joyDelta: 74,
       color: Color(0xFF759EB5),
+      characterSeed: '재홍|1995-06-12',
       isOwner: true,
     ),
     ClassroomSceneMember(
@@ -42,6 +44,7 @@ class ClassroomPage extends StatelessWidget {
       focusDelta: -8,
       joyDelta: 92,
       color: Color(0xFFD38170),
+      characterSeed: '민수|1996-03-17',
     ),
     ClassroomSceneMember(
       name: '현우',
@@ -52,6 +55,7 @@ class ClassroomPage extends StatelessWidget {
       focusDelta: -38,
       joyDelta: 92,
       color: Color(0xFFC7A45E),
+      characterSeed: '현우|1995-11-23',
     ),
   ];
 
