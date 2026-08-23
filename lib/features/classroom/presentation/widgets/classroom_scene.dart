@@ -4,16 +4,21 @@ import '../../../../app/app_colors.dart';
 import '../../../../app/app_spacing.dart';
 import '../models/classroom_scene_member.dart';
 import 'classroom_seat.dart';
+import 'seat_assignment_animation.dart';
 
 class ClassroomScene extends StatelessWidget {
   const ClassroomScene({
     required this.members,
     required this.onMemberTap,
+    this.enteringMember,
+    this.onEntryComplete,
     super.key,
   });
 
   final List<ClassroomSceneMember> members;
   final ValueChanged<ClassroomSceneMember> onMemberTap;
+  final ClassroomSceneMember? enteringMember;
+  final VoidCallback? onEntryComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +60,12 @@ class ClassroomScene extends StatelessWidget {
                   },
                 ),
               ),
+              if (enteringMember case final member?)
+                SeatAssignmentAnimation(
+                  seatIndex: member.seatIndex,
+                  characterSeed: member.characterSeed,
+                  onComplete: onEntryComplete ?? () {},
+                ),
             ],
           ),
         ),

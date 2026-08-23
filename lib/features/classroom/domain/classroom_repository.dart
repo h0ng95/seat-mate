@@ -12,9 +12,38 @@ class CreateClassroomCommand {
   final LocalDate ownerBirthDate;
 }
 
+class JoinClassroomCommand {
+  const JoinClassroomCommand({
+    required this.shareCode,
+    required this.name,
+    required this.birthDate,
+  });
+
+  final String shareCode;
+  final Nickname name;
+  final LocalDate birthDate;
+}
+
+class JoinClassroomResult {
+  const JoinClassroomResult({
+    required this.classroom,
+    required this.member,
+    this.isDuplicate = false,
+  });
+
+  final Classroom classroom;
+  final ClassroomMember member;
+  final bool isDuplicate;
+}
+
 abstract interface class ClassroomRepository {
   Future<Classroom> createClassroom(CreateClassroomCommand command);
   Future<Classroom> getClassroom(String shareCode);
+  Future<JoinClassroomResult> joinClassroom(JoinClassroomCommand command);
+}
+
+class ClassroomFullException implements Exception {
+  const ClassroomFullException();
 }
 
 class ClassroomNotFoundException implements Exception {

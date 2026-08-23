@@ -34,3 +34,26 @@ final createClassroomControllerProvider =
     NotifierProvider<CreateClassroomController, AsyncValue<Classroom>?>(
       CreateClassroomController.new,
     );
+
+class JoinClassroomController
+    extends Notifier<AsyncValue<JoinClassroomResult>?> {
+  @override
+  AsyncValue<JoinClassroomResult>? build() => null;
+
+  Future<JoinClassroomResult?> join(JoinClassroomCommand command) async {
+    if (state?.isLoading ?? false) return null;
+    state = const AsyncLoading();
+    final result = await AsyncValue.guard(
+      () => ref.read(classroomRepositoryProvider).joinClassroom(command),
+    );
+    state = result;
+    return result.value;
+  }
+
+  void reset() => state = null;
+}
+
+final joinClassroomControllerProvider =
+    NotifierProvider<JoinClassroomController, AsyncValue<JoinClassroomResult>?>(
+      JoinClassroomController.new,
+    );

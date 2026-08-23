@@ -54,6 +54,51 @@ class FakeClassroomRepository implements ClassroomRepository {
     return classroom;
   }
 
+  @override
+  Future<JoinClassroomResult> joinClassroom(
+    JoinClassroomCommand command,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    final classroom = _classrooms[command.shareCode];
+    if (classroom == null) throw ClassroomNotFoundException(command.shareCode);
+
+    for (final member in classroom.members) {
+      if (member.name == command.name &&
+          member.birthDate == command.birthDate) {
+        return JoinClassroomResult(
+          classroom: classroom,
+          member: member,
+          isDuplicate: true,
+        );
+      }
+    }
+    if (classroom.isFull) throw const ClassroomFullException();
+
+    final result = _algorithm.deriveMember(
+      classroomCode: classroom.shareCode,
+      ownerBirthDate: classroom.ownerBirthDate,
+      ownerSeatIndex: classroom.ownerSeatIndex,
+      memberName: command.name,
+      memberBirthDate: command.birthDate,
+      occupiedSeats: classroom.members
+          .map((member) => member.seatIndex)
+          .toSet(),
+    );
+    final member = ClassroomMember(
+      id: 'member-${++_sequence}',
+      name: command.name,
+      birthDate: command.birthDate,
+      seatIndex: result.seatIndex,
+      characterSeed: result.characterSeed,
+      focusDelta: result.focusDelta,
+      joyDelta: result.joyDelta,
+      relationship: result.relationship,
+    );
+    final updated = classroom.copyWith(members: [...classroom.members, member]);
+    _classrooms[command.shareCode] = updated;
+    return JoinClassroomResult(classroom: updated, member: member);
+  }
+
   Classroom _previewClassroom() {
     final ownerBirth = LocalDate.parseIso('1995-06-12');
     final owner = ClassroomMember(
