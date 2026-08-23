@@ -148,47 +148,16 @@ class _ClassroomSeatState extends State<ClassroomSeat> {
                       ),
                     if (person != null)
                       Positioned(
-                        right: 4,
-                        top: 2,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: AppColors.chalk,
-                            border: Border.all(
-                              color: const Color(0xFF845137),
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(3),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x55000000),
-                                offset: Offset(2, 2),
+                        right: 1,
+                        top: 0,
+                        child: person.isOwner
+                            ? const _OwnerSeatBadge()
+                            : _CompatibilityHeartBadge(
+                                key: ValueKey(
+                                  'heart-score-${widget.seatIndex}',
+                                ),
+                                score: person.compatibility?.heartScore,
                               ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 3,
-                              vertical: 2,
-                            ),
-                            child: person.isOwner
-                                ? const Icon(
-                                    Icons.star_rounded,
-                                    size: 12,
-                                    color: AppColors.yellow,
-                                  )
-                                : Text(
-                                    person.compatibility == null
-                                        ? '♥'
-                                        : '♥ ${person.compatibility!.heartScore}%',
-                                    style: const TextStyle(
-                                      color: AppColors.coral,
-                                      fontSize: 8,
-                                      height: 1,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                          ),
-                        ),
                       ),
                     if (person != null &&
                         widget.idleMotion == SeatIdleMotion.emote &&
@@ -213,6 +182,104 @@ class _ClassroomSeatState extends State<ClassroomSeat> {
                 );
               },
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompatibilityHeartBadge extends StatelessWidget {
+  const _CompatibilityHeartBadge({required this.score, super.key});
+
+  final int? score;
+
+  @override
+  Widget build(BuildContext context) {
+    final scoreLabel = score == null ? '?' : '$score%';
+    return Semantics(
+      label: score == null ? '케미 지수 계산 중' : '케미 지수 $score퍼센트',
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: 38,
+          height: 32,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Positioned(
+                left: 2,
+                top: 3,
+                child: Icon(
+                  Icons.favorite_rounded,
+                  size: 34,
+                  color: Color(0xFF74383B),
+                ),
+              ),
+              const Positioned(
+                left: 3,
+                top: 1,
+                child: Icon(
+                  Icons.favorite_rounded,
+                  size: 32,
+                  color: AppColors.coral,
+                ),
+              ),
+              Positioned(
+                top: 9,
+                child: Text(
+                  scoreLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    height: 1,
+                    fontWeight: FontWeight.w900,
+                    shadows: [
+                      Shadow(color: Color(0xAA74383B), offset: Offset(1, 1)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OwnerSeatBadge extends StatelessWidget {
+  const _OwnerSeatBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '우리 반 생성자',
+      child: const ExcludeSemantics(
+        child: SizedBox(
+          width: 30,
+          height: 30,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned(
+                left: 2,
+                top: 3,
+                child: Icon(
+                  Icons.star_rounded,
+                  size: 27,
+                  color: Color(0xFF735122),
+                ),
+              ),
+              Positioned(
+                left: 3,
+                top: 1,
+                child: Icon(
+                  Icons.star_rounded,
+                  size: 25,
+                  color: AppColors.yellow,
+                ),
+              ),
+            ],
           ),
         ),
       ),
