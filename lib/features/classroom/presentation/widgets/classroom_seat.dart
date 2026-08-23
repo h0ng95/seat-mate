@@ -291,11 +291,7 @@ class _OwnerSeatBadge extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Icon(
-                Icons.star_rounded,
-                size: 18,
-                color: AppColors.yellow,
-              ),
+              Icon(Icons.star_rounded, size: 18, color: AppColors.yellow),
               Icon(
                 Icons.star_border_rounded,
                 size: 18,
