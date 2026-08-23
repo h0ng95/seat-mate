@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../domain/character_generator.dart';
+import '../domain/character_gender.dart';
 import '../domain/character_parts.dart';
 
 class PixelCharacter extends StatelessWidget {
@@ -129,8 +130,8 @@ class _PixelCharacterPainter extends CustomPainter {
     );
 
     _oval(canvas, 7, 36, 18, 3, _paint(_shadow));
-    _drawLegs(canvas, pants, shoe, walkFrame);
-    _drawBody(canvas, outline, top, skin);
+    _drawLegs(canvas, pants, shoe, skin, walkFrame);
+    _drawBody(canvas, outline, top, skin, pants);
     _drawHairBack(canvas, hair, outline);
     _drawHead(canvas, outline, skin);
     _drawHairFront(canvas, hair, hairHighlight);
@@ -143,7 +144,22 @@ class _PixelCharacterPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawLegs(Canvas canvas, Paint pants, Paint shoe, int frame) {
+  void _drawLegs(
+    Canvas canvas,
+    Paint pants,
+    Paint shoe,
+    Paint skin,
+    int frame,
+  ) {
+    if (parts.gender == CharacterGender.female) {
+      final leftX = frame == 2 ? 9.0 : 10.0;
+      final rightX = frame == 1 ? 19.0 : 18.0;
+      _rect(canvas, leftX, 32, 4, 5, skin);
+      _rect(canvas, rightX, 32, 4, 5, skin);
+      _rect(canvas, leftX - 1, 36, 6, 2, shoe);
+      _rect(canvas, rightX - 1, 36, 6, 2, shoe);
+      return;
+    }
     if (frame == 1) {
       _rect(canvas, 8, 31, 6, 6, pants);
       _rect(canvas, 18, 32, 5, 5, pants);
@@ -168,7 +184,13 @@ class _PixelCharacterPainter extends CustomPainter {
     _rect(canvas, 18, 36, 2, 1, _paint(const Color(0x44FFFFFF)));
   }
 
-  void _drawBody(Canvas canvas, Paint outline, Paint top, Paint skin) {
+  void _drawBody(
+    Canvas canvas,
+    Paint outline,
+    Paint top,
+    Paint skin,
+    Paint bottom,
+  ) {
     _rect(canvas, 8, 21, 16, 12, outline);
     _rect(canvas, 10, 21, 12, 11, top);
     _rect(canvas, 7, 23, 3, 8, outline);
@@ -178,6 +200,18 @@ class _PixelCharacterPainter extends CustomPainter {
     _rect(canvas, 14, 22, 4, 2, _paint(const Color(0x55FFFFFF)));
     _rect(canvas, 11, 22, 2, 2, _paint(const Color(0x33FFFFFF)));
     _rect(canvas, 19, 22, 2, 2, _paint(const Color(0x33000000)));
+    switch (parts.gender) {
+      case CharacterGender.female:
+        _rect(canvas, 9, 29, 14, 5, outline);
+        _rect(canvas, 10, 29, 12, 4, bottom);
+        _rect(canvas, 14, 21, 4, 3, _paint(const Color(0xFFF7EEE0)));
+        _rect(canvas, 15, 23, 2, 2, _paint(const Color(0xFFE85F65)));
+      case CharacterGender.male:
+        _rect(canvas, 15, 22, 2, 6, _paint(const Color(0xFFF7EEE0)));
+        _rect(canvas, 15, 24, 2, 3, _paint(const Color(0xFF315B48)));
+      case CharacterGender.unspecified:
+        break;
+    }
   }
 
   void _drawHead(Canvas canvas, Paint outline, Paint skin) {

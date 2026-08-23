@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seat_mate/core/values/local_date.dart';
 import 'package:seat_mate/core/values/nickname.dart';
+import 'package:seat_mate/features/character/domain/character_gender.dart';
 import 'package:seat_mate/features/classroom/data/fake_classroom_repository.dart';
 import 'package:seat_mate/features/classroom/domain/birth_profile.dart';
 import 'package:seat_mate/features/classroom/domain/classroom_repository.dart';
@@ -30,12 +31,17 @@ void main() {
       JoinClassroomCommand(
         shareCode: 'preview',
         name: Nickname('소라'),
+        gender: CharacterGender.female,
         birth: BirthProfile(date: LocalDate.parseIso('1998-02-21')),
       ),
     );
 
     final occupied = result.classroom.members.map((member) => member.seatIndex);
     expect(result.isDuplicate, isFalse);
+    expect(
+      CharacterIdentity.parse(result.member.characterSeed).gender,
+      CharacterGender.female,
+    );
     expect(occupied.toSet(), hasLength(occupied.length));
     expect(result.classroom.members, hasLength(5));
   });
@@ -45,8 +51,16 @@ void main() {
     final created = await repository.createClassroom(
       CreateClassroomCommand(
         ownerName: Nickname('재홍'),
+        gender: CharacterGender.male,
         ownerBirth: BirthProfile(date: LocalDate.parseIso('1995-06-12')),
       ),
+    );
+
+    expect(
+      CharacterIdentity.parse(
+        created.members.firstWhere((member) => member.isOwner).characterSeed,
+      ).gender,
+      CharacterGender.male,
     );
 
     final beforeDelete = await repository.getMyClassrooms();

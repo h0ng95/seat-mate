@@ -1,6 +1,7 @@
 import '../../../core/hashing/stable_hash.dart';
 import '../../../core/values/local_date.dart';
 import '../../../core/values/nickname.dart';
+import '../../character/domain/character_gender.dart';
 import '../domain/birth_profile.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
@@ -27,8 +28,11 @@ class FakeClassroomRepository implements ClassroomRepository {
       'owner|${command.ownerBirth.canonical}',
     );
     final shareCode = 'class${(++_sequence).toString().padLeft(5, '0')}';
-    final characterSeed = StableHash.hex(
-      '${command.ownerName.normalized}|${command.ownerBirth.canonical}',
+    final characterSeed = CharacterIdentity(
+      gender: command.gender,
+      baseSeed: StableHash.hex(
+        '${command.ownerName.normalized}|${command.ownerBirth.canonical}',
+      ),
     );
     final owner = ClassroomMember(
       id: 'owner-$_sequence',
@@ -36,7 +40,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       birthProfile: command.ownerBirth,
       sajuChart: ownerResult.sajuChart,
       seatIndex: ownerResult.seatIndex,
-      characterSeed: characterSeed,
+      characterSeed: characterSeed.storedSeed,
       focusDelta: 18,
       joyDelta: 74,
       ownerProfile: ownerResult.profile,
@@ -121,7 +125,10 @@ class FakeClassroomRepository implements ClassroomRepository {
       birthProfile: command.birth,
       sajuChart: result.sajuChart,
       seatIndex: result.seatIndex,
-      characterSeed: result.characterSeed,
+      characterSeed: CharacterIdentity(
+        gender: command.gender,
+        baseSeed: result.characterSeed,
+      ).storedSeed,
       focusDelta: result.focusDelta,
       joyDelta: result.joyDelta,
       relationship: result.relationship,
@@ -149,7 +156,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       ownerSeatIndex: classroom.ownerSeatIndex,
       members: members.where((member) => !member.isOwner).map((member) {
         return SeatAssignmentCandidate(
-          stableKey: member.characterSeed,
+          stableKey: CharacterIdentity.parse(member.characterSeed).baseSeed,
           relationship: member.relationship!,
           heartScore: member.compatibility!.heartScore,
         );
@@ -159,7 +166,12 @@ class FakeClassroomRepository implements ClassroomRepository {
         .map(
           (member) => member.isOwner
               ? member
-              : member.copyWith(seatIndex: assignments[member.characterSeed]),
+              : member.copyWith(
+                  seatIndex:
+                      assignments[CharacterIdentity.parse(
+                        member.characterSeed,
+                      ).baseSeed],
+                ),
         )
         .toList(growable: false);
   }
@@ -177,16 +189,19 @@ class FakeClassroomRepository implements ClassroomRepository {
       birthProfile: ownerBirth,
       sajuChart: ownerResult.sajuChart,
       seatIndex: 5,
-      characterSeed: '재홍|1995-06-12',
+      characterSeed: const CharacterIdentity(
+        gender: CharacterGender.male,
+        baseSeed: '재홍|1995-06-12',
+      ).storedSeed,
       focusDelta: 18,
       joyDelta: 74,
       ownerProfile: OwnerProfileType.center,
       isOwner: true,
     );
     final memberData = [
-      ('지현', '1997-08-04', 8, 8, 20),
-      ('민수', '1996-03-17', 4, 14, 0),
-      ('현우', '1995-11-23', 1, null, null),
+      ('지현', '1997-08-04', 8, 8, 20, CharacterGender.female),
+      ('민수', '1996-03-17', 4, 14, 0, CharacterGender.male),
+      ('현우', '1995-11-23', 1, null, null, CharacterGender.male),
     ];
     final members = memberData.indexed.map((entry) {
       final item = entry.$2;
@@ -206,7 +221,10 @@ class FakeClassroomRepository implements ClassroomRepository {
         birthProfile: birth,
         sajuChart: chart,
         seatIndex: item.$3,
-        characterSeed: '${item.$1}|${item.$2}',
+        characterSeed: CharacterIdentity(
+          gender: item.$6,
+          baseSeed: '${item.$1}|${item.$2}',
+        ).storedSeed,
         relationship: compatibility.relationshipType,
         compatibility: compatibility,
         focusDelta: ((compatibility.evidence.first.score - 20) * 3).clamp(

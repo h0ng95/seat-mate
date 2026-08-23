@@ -1,3 +1,5 @@
+import 'character_gender.dart';
+
 enum HairStyle { neat, parted, wave, long, fluffy, shortCurl, halfTie, beanie }
 
 enum FaceStyle { calm, smile, blank, playful, sleepy }
@@ -15,6 +17,7 @@ enum PoseStyle { front, reading, waving, side }
 
 class CharacterParts {
   const CharacterParts({
+    this.gender = CharacterGender.unspecified,
     required this.hairStyle,
     required this.hairColorIndex,
     required this.topColorIndex,
@@ -26,6 +29,7 @@ class CharacterParts {
     required this.shoeColorIndex,
   });
 
+  final CharacterGender gender;
   final HairStyle hairStyle;
   final int hairColorIndex;
   final int topColorIndex;
@@ -37,6 +41,7 @@ class CharacterParts {
   final int shoeColorIndex;
 
   CharacterParts copyWith({
+    CharacterGender? gender,
     HairStyle? hairStyle,
     int? hairColorIndex,
     int? topColorIndex,
@@ -48,6 +53,7 @@ class CharacterParts {
     int? shoeColorIndex,
   }) {
     return CharacterParts(
+      gender: gender ?? this.gender,
       hairStyle: hairStyle ?? this.hairStyle,
       hairColorIndex: hairColorIndex ?? this.hairColorIndex,
       topColorIndex: topColorIndex ?? this.topColorIndex,
@@ -61,6 +67,7 @@ class CharacterParts {
   }
 
   Map<String, Object> toJson() => {
+    'gender': gender.name,
     'hairStyle': hairStyle.name,
     'hairColorIndex': hairColorIndex,
     'topColorIndex': topColorIndex,
@@ -74,6 +81,9 @@ class CharacterParts {
 
   factory CharacterParts.fromJson(Map<String, Object?> json) {
     return CharacterParts(
+      gender: CharacterGender.values.byName(
+        json['gender'] as String? ?? CharacterGender.unspecified.name,
+      ),
       hairStyle: HairStyle.values.byName(json['hairStyle']! as String),
       hairColorIndex: json['hairColorIndex']! as int,
       topColorIndex: json['topColorIndex']! as int,
@@ -91,6 +101,7 @@ class CharacterParts {
   @override
   bool operator ==(Object other) {
     return other is CharacterParts &&
+        gender == other.gender &&
         hairStyle == other.hairStyle &&
         hairColorIndex == other.hairColorIndex &&
         topColorIndex == other.topColorIndex &&
@@ -104,6 +115,7 @@ class CharacterParts {
 
   @override
   int get hashCode => Object.hash(
+    gender,
     hairStyle,
     hairColorIndex,
     topColorIndex,

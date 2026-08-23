@@ -9,6 +9,8 @@ import '../../../../core/values/nickname.dart';
 import '../../../../shared/presentation/app_text_field.dart';
 import '../../../../shared/presentation/primary_button.dart';
 import '../../../../shared/presentation/separated_digits_input_formatter.dart';
+import '../../../character/domain/character_gender.dart';
+import '../../../character/presentation/character_gender_selector.dart';
 import '../../application/classroom_providers.dart';
 import '../../domain/birth_profile.dart';
 import '../../domain/classroom_repository.dart';
@@ -34,6 +36,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
   final _nameController = TextEditingController();
   final _birthController = TextEditingController();
   final _birthTimeController = TextEditingController();
+  CharacterGender? _gender;
 
   @override
   void dispose() {
@@ -107,6 +110,8 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
               validator: _validateName,
             ),
             const SizedBox(height: AppSpacing.sm),
+            CharacterGenderSelector(onChanged: (value) => _gender = value),
+            const SizedBox(height: AppSpacing.sm),
             AppTextField(
               label: '양력 생년월일',
               hintText: '1996-03-17',
@@ -162,6 +167,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
           JoinClassroomCommand(
             shareCode: widget.shareCode,
             name: Nickname(_nameController.text),
+            gender: _gender!,
             birth: BirthProfile(
               date: _parseDate(_birthController.text),
               hour: birthTime?.hour,

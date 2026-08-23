@@ -9,6 +9,7 @@ import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../character/presentation/pixel_character.dart';
+import '../../character/domain/character_gender.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/presentation/kakao_login_button.dart';
 import '../../classroom/application/classroom_providers.dart';
@@ -111,20 +112,30 @@ class _LandingMascotBand extends StatelessWidget {
                 ),
               ),
             ),
-            const Align(
+            Align(
               alignment: Alignment(-0.38, 0.58),
               child: SizedBox(
                 width: 76,
                 height: 104,
-                child: PixelCharacter(seed: 'landing-owner'),
+                child: PixelCharacter(
+                  seed: const CharacterIdentity(
+                    gender: CharacterGender.male,
+                    baseSeed: 'landing-owner',
+                  ).storedSeed,
+                ),
               ),
             ),
-            const Align(
+            Align(
               alignment: Alignment(0.38, 0.58),
               child: SizedBox(
                 width: 76,
                 height: 104,
-                child: PixelCharacter(seed: 'landing-friend'),
+                child: PixelCharacter(
+                  seed: const CharacterIdentity(
+                    gender: CharacterGender.female,
+                    baseSeed: 'landing-friend',
+                  ).storedSeed,
+                ),
               ),
             ),
             Positioned(

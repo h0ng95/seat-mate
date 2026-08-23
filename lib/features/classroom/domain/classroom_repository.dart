@@ -1,4 +1,5 @@
 import '../../../core/values/nickname.dart';
+import '../../character/domain/character_gender.dart';
 import 'birth_profile.dart';
 import 'classroom.dart';
 
@@ -6,10 +7,12 @@ class CreateClassroomCommand {
   const CreateClassroomCommand({
     required this.ownerName,
     required this.ownerBirth,
+    this.gender = CharacterGender.unspecified,
   });
 
   final Nickname ownerName;
   final BirthProfile ownerBirth;
+  final CharacterGender gender;
 }
 
 class JoinClassroomCommand {
@@ -17,11 +20,13 @@ class JoinClassroomCommand {
     required this.shareCode,
     required this.name,
     required this.birth,
+    this.gender = CharacterGender.unspecified,
   });
 
   final String shareCode;
   final Nickname name;
   final BirthProfile birth;
+  final CharacterGender gender;
 }
 
 class JoinClassroomResult {

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/hashing/stable_hash.dart';
 import '../../../core/values/nickname.dart';
+import '../../character/domain/character_gender.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
 import '../domain/relationship.dart';
@@ -21,8 +22,11 @@ class SupabaseClassroomRepository implements ClassroomRepository {
     final ownerAlgorithmSeed = StableHash.hex(
       'owner|${command.ownerBirth.canonical}',
     );
-    final characterSeed = StableHash.hex(
-      '${command.ownerName.normalized}|${command.ownerBirth.canonical}',
+    final characterSeed = CharacterIdentity(
+      gender: command.gender,
+      baseSeed: StableHash.hex(
+        '${command.ownerName.normalized}|${command.ownerBirth.canonical}',
+      ),
     );
     try {
       final response = await _client.rpc(
@@ -35,7 +39,7 @@ class SupabaseClassroomRepository implements ClassroomRepository {
           'p_owner_saju_chart': owner.sajuChart.toJson(),
           'p_owner_seat': owner.seatIndex,
           'p_owner_profile': owner.profile.name,
-          'p_owner_character_seed': characterSeed,
+          'p_owner_character_seed': characterSeed.storedSeed,
           'p_owner_algorithm_seed': ownerAlgorithmSeed,
           'p_algorithm_version': SeatMateAlgorithmV1.version,
         },
@@ -125,11 +129,16 @@ class SupabaseClassroomRepository implements ClassroomRepository {
         memberName: command.name,
         memberBirth: command.birth,
       );
+      final characterIdentity = CharacterIdentity(
+        gender: command.gender,
+        baseSeed: calculated.characterSeed,
+      );
       final existingMembers = current.members
           .where((member) => !member.isOwner)
           .toList(growable: false);
       for (final member in current.members) {
-        if (member.characterSeed == calculated.characterSeed) {
+        if (CharacterIdentity.parse(member.characterSeed).baseSeed ==
+            calculated.characterSeed) {
           return JoinClassroomResult(
             classroom: current,
             member: member,
@@ -149,7 +158,7 @@ class SupabaseClassroomRepository implements ClassroomRepository {
               throw StateError('이 교실은 이전 계산 방식으로 만들어져 전체 자리 재배치를 지원하지 않습니다.');
             }
             return SeatAssignmentCandidate(
-              stableKey: member.characterSeed,
+              stableKey: CharacterIdentity.parse(member.characterSeed).baseSeed,
               relationship: relationship,
               heartScore: compatibility.heartScore,
             );
@@ -178,10 +187,15 @@ class SupabaseClassroomRepository implements ClassroomRepository {
                 .map((member) => member.id)
                 .toList(growable: false),
             'p_existing_member_seats': existingMembers
-                .map((member) => assignments[member.characterSeed])
+                .map(
+                  (member) =>
+                      assignments[CharacterIdentity.parse(
+                        member.characterSeed,
+                      ).baseSeed],
+                )
                 .toList(growable: false),
             'p_new_seat': assignments[calculated.characterSeed],
-            'p_character_seed': calculated.characterSeed,
+            'p_character_seed': characterIdentity.storedSeed,
             'p_fun_focus_delta': calculated.focusDelta,
             'p_fun_joy_delta': calculated.joyDelta,
             'p_algorithm_version': SeatMateAlgorithmV1.version,

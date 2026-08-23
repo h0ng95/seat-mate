@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seat_mate/features/character/domain/character_generator.dart';
+import 'package:seat_mate/features/character/domain/character_gender.dart';
 import 'package:seat_mate/features/character/domain/character_parts.dart';
 
 void main() {
@@ -38,5 +39,48 @@ void main() {
     expect(customized.bottomColorIndex, 4);
     expect(customized.accessoryStyle, AccessoryStyle.headphones);
     expect(CharacterParts.fromJson(customized.toJson()), customized);
+  });
+
+  test('gender-tagged seeds produce matching character silhouettes', () {
+    final male = CharacterGenerator.fromSeed(
+      const CharacterIdentity(
+        gender: CharacterGender.male,
+        baseSeed: 'same-person',
+      ).storedSeed,
+    );
+    final female = CharacterGenerator.fromSeed(
+      const CharacterIdentity(
+        gender: CharacterGender.female,
+        baseSeed: 'same-person',
+      ).storedSeed,
+    );
+
+    expect(male.gender, CharacterGender.male);
+    expect(female.gender, CharacterGender.female);
+    expect(
+      male.hairStyle,
+      isIn(const [
+        HairStyle.neat,
+        HairStyle.parted,
+        HairStyle.fluffy,
+        HairStyle.shortCurl,
+        HairStyle.beanie,
+      ]),
+    );
+    expect(
+      female.hairStyle,
+      isIn(const [
+        HairStyle.wave,
+        HairStyle.long,
+        HairStyle.halfTie,
+        HairStyle.neat,
+      ]),
+    );
+  });
+
+  test('old untagged character seeds remain supported', () {
+    final parts = CharacterGenerator.fromSeed('legacy-student');
+
+    expect(parts.gender, CharacterGender.unspecified);
   });
 }

@@ -2,21 +2,50 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import 'character_gender.dart';
 import 'character_parts.dart';
 
 abstract final class CharacterGenerator {
   static CharacterParts fromSeed(String seed) {
-    final bytes = sha256.convert(utf8.encode('v1|character|$seed')).bytes;
-    final hairStyle =
-        HairStyle.values[_index(bytes[0], HairStyle.values.length)];
-    var accessory =
-        AccessoryStyle.values[_index(bytes[4], AccessoryStyle.values.length)];
+    final identity = CharacterIdentity.parse(seed);
+    final bytes = sha256
+        .convert(utf8.encode('v1|character|${identity.baseSeed}'))
+        .bytes;
+    final hairStyles = switch (identity.gender) {
+      CharacterGender.male => const [
+        HairStyle.neat,
+        HairStyle.parted,
+        HairStyle.fluffy,
+        HairStyle.shortCurl,
+        HairStyle.beanie,
+      ],
+      CharacterGender.female => const [
+        HairStyle.wave,
+        HairStyle.long,
+        HairStyle.halfTie,
+        HairStyle.neat,
+      ],
+      CharacterGender.unspecified => HairStyle.values,
+    };
+    final accessories = switch (identity.gender) {
+      CharacterGender.male => const [
+        AccessoryStyle.none,
+        AccessoryStyle.roundGlasses,
+        AccessoryStyle.squareGlasses,
+        AccessoryStyle.headphones,
+        AccessoryStyle.pen,
+      ],
+      _ => AccessoryStyle.values,
+    };
+    final hairStyle = hairStyles[_index(bytes[0], hairStyles.length)];
+    var accessory = accessories[_index(bytes[4], accessories.length)];
 
     if (hairStyle == HairStyle.beanie && accessory == AccessoryStyle.hairPin) {
       accessory = AccessoryStyle.none;
     }
 
     return CharacterParts(
+      gender: identity.gender,
       hairStyle: hairStyle,
       hairColorIndex: _index(bytes[1], 6),
       topColorIndex: _index(bytes[2], 8),

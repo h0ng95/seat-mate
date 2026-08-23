@@ -12,6 +12,8 @@ import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../../shared/presentation/separated_digits_input_formatter.dart';
 import '../../character/presentation/pixel_character.dart';
+import '../../character/domain/character_gender.dart';
+import '../../character/presentation/character_gender_selector.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/presentation/kakao_login_button.dart';
 import '../application/classroom_providers.dart';
@@ -41,6 +43,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
   _CreatePhase _phase = _CreatePhase.input;
   Nickname? _name;
   BirthProfile? _birthProfile;
+  CharacterGender? _gender;
   OwnerResult? _ownerResult;
 
   @override
@@ -132,6 +135,10 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
                     hintText: '재홍',
                     controller: _nameController,
                     validator: _validateName,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  CharacterGenderSelector(
+                    onChanged: (value) => _gender = value,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   AppTextField(
@@ -295,7 +302,11 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     final classroom = await ref
         .read(createClassroomControllerProvider.notifier)
         .create(
-          CreateClassroomCommand(ownerName: _name!, ownerBirth: _birthProfile!),
+          CreateClassroomCommand(
+            ownerName: _name!,
+            ownerBirth: _birthProfile!,
+            gender: _gender!,
+          ),
         );
     if (classroom != null && mounted) {
       context.go('/class/${classroom.shareCode}');
