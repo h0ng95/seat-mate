@@ -72,6 +72,40 @@ class SupabaseClassroomRepository implements ClassroomRepository {
   }
 
   @override
+  Future<List<SavedClassroomSummary>> getMyClassrooms() async {
+    try {
+      final response = await _client.rpc('list_my_classrooms');
+      return (response as List)
+          .cast<Map<String, dynamic>>()
+          .map((row) {
+            return SavedClassroomSummary(
+              id: row['classroom_id'] as String,
+              shareCode: row['share_code'] as String,
+              ownerName: Nickname(row['owner_name'] as String),
+              memberCount: row['member_count'] as int,
+              createdAt: DateTime.parse(row['created_at'] as String),
+            );
+          })
+          .toList(growable: false);
+    } on PostgrestException catch (error) {
+      throw _mapException(error, '');
+    }
+  }
+
+  @override
+  Future<void> deleteMyClassroom(String shareCode) async {
+    try {
+      final deleted = await _client.rpc(
+        'delete_my_classroom',
+        params: {'p_share_code': shareCode},
+      );
+      if (deleted != true) throw ClassroomNotFoundException(shareCode);
+    } on PostgrestException catch (error) {
+      throw _mapException(error, shareCode);
+    }
+  }
+
+  @override
   Future<JoinClassroomResult> joinClassroom(
     JoinClassroomCommand command,
   ) async {

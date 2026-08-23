@@ -40,6 +40,30 @@ void main() {
     expect(result.classroom.members, hasLength(5));
   });
 
+  test('lists and deletes classrooms owned by the current user', () async {
+    final repository = FakeClassroomRepository();
+    final created = await repository.createClassroom(
+      CreateClassroomCommand(
+        ownerName: Nickname('재홍'),
+        ownerBirth: BirthProfile(date: LocalDate.parseIso('1995-06-12')),
+      ),
+    );
+
+    final beforeDelete = await repository.getMyClassrooms();
+    expect(
+      beforeDelete.map((classroom) => classroom.shareCode),
+      contains(created.shareCode),
+    );
+
+    await repository.deleteMyClassroom(created.shareCode);
+
+    final afterDelete = await repository.getMyClassrooms();
+    expect(
+      afterDelete.map((classroom) => classroom.shareCode),
+      isNot(contains(created.shareCode)),
+    );
+  });
+
   test(
     'blocks a thirteenth member when all twelve seats are occupied',
     () async {

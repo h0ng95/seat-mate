@@ -6,6 +6,22 @@ import 'saju_chart.dart';
 import 'saju_compatibility.dart';
 import 'seat_mate_algorithm.dart';
 
+class SavedClassroomSummary {
+  const SavedClassroomSummary({
+    required this.id,
+    required this.shareCode,
+    required this.ownerName,
+    required this.memberCount,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String shareCode;
+  final Nickname ownerName;
+  final int memberCount;
+  final DateTime createdAt;
+}
+
 class ClassroomMember {
   const ClassroomMember({
     required this.id,

@@ -19,12 +19,24 @@ final classroomRepositoryProvider = Provider<ClassroomRepository>((ref) {
   return FakeClassroomRepository();
 });
 
+final demoClassroomRepositoryProvider = Provider<FakeClassroomRepository>(
+  (ref) => FakeClassroomRepository(),
+);
+
 final classroomProvider = FutureProvider.family<Classroom, String>((
   ref,
   shareCode,
 ) {
-  return ref.watch(classroomRepositoryProvider).getClassroom(shareCode);
+  final repository = shareCode == 'preview'
+      ? ref.watch(demoClassroomRepositoryProvider)
+      : ref.watch(classroomRepositoryProvider);
+  return repository.getClassroom(shareCode);
 });
+
+final savedClassroomsProvider =
+    FutureProvider.family<List<SavedClassroomSummary>, String>((ref, ownerId) {
+      return ref.watch(classroomRepositoryProvider).getMyClassrooms();
+    });
 
 class CreateClassroomController extends Notifier<AsyncValue<Classroom>?> {
   @override
@@ -54,8 +66,11 @@ class JoinClassroomController
   Future<JoinClassroomResult?> join(JoinClassroomCommand command) async {
     if (state?.isLoading ?? false) return null;
     state = const AsyncLoading();
+    final repository = command.shareCode == 'preview'
+        ? ref.read(demoClassroomRepositoryProvider)
+        : ref.read(classroomRepositoryProvider);
     final result = await AsyncValue.guard(
-      () => ref.read(classroomRepositoryProvider).joinClassroom(command),
+      () => repository.joinClassroom(command),
     );
     state = result;
     return result.value;
@@ -67,4 +82,25 @@ class JoinClassroomController
 final joinClassroomControllerProvider =
     NotifierProvider<JoinClassroomController, AsyncValue<JoinClassroomResult>?>(
       JoinClassroomController.new,
+    );
+
+class DeleteClassroomController extends Notifier<AsyncValue<void>?> {
+  @override
+  AsyncValue<void>? build() => null;
+
+  Future<bool> delete(String shareCode) async {
+    if (state?.isLoading ?? false) return false;
+    state = const AsyncLoading();
+    final result = await AsyncValue.guard(
+      () => ref.read(classroomRepositoryProvider).deleteMyClassroom(shareCode),
+    );
+    state = result;
+    if (result.hasValue) ref.invalidate(savedClassroomsProvider);
+    return result.hasValue;
+  }
+}
+
+final deleteClassroomControllerProvider =
+    NotifierProvider<DeleteClassroomController, AsyncValue<void>?>(
+      DeleteClassroomController.new,
     );

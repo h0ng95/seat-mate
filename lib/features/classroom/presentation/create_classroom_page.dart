@@ -11,6 +11,8 @@ import '../../../shared/presentation/app_text_field.dart';
 import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../character/presentation/pixel_character.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../auth/presentation/kakao_login_button.dart';
 import '../application/classroom_providers.dart';
 import '../domain/birth_profile.dart';
 import '../domain/classroom_repository.dart';
@@ -50,6 +52,20 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
 
   @override
   Widget build(BuildContext context) {
+    final config = ref.watch(appConfigProvider);
+    final authState = ref.watch(authUserProvider);
+    if (config.hasSupabase && authState.isLoading) {
+      return const AppScaffold(
+        child: SizedBox(
+          height: 360,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+    if (config.hasSupabase && authState.value == null) {
+      return const AppScaffold(child: _CreateLoginRequired());
+    }
+
     final createState = ref.watch(createClassroomControllerProvider);
     return AppScaffold(
       child: AnimatedSwitcher(
@@ -337,6 +353,41 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     final division = ClassroomSeatLayout.divisionOf(seatIndex);
     final side = ClassroomSeatLayout.sideOf(seatIndex);
     return '${seatIndex + 1}번 · ${rows[row]} ${divisions[division]} ${sides[side]} 자리';
+  }
+}
+
+class _CreateLoginRequired extends StatelessWidget {
+  const _CreateLoginRequired();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: AppSpacing.xl),
+        const Icon(
+          Icons.lock_outline_rounded,
+          size: 52,
+          color: AppColors.board,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          '반을 만들려면\n로그인해 주세요',
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          '로그인하면 링크를 잃어버려도\n내 반에서 다시 찾을 수 있어요.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const KakaoLoginButton(),
+      ],
+    );
   }
 }
 

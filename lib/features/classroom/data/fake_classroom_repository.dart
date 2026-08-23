@@ -64,6 +64,27 @@ class FakeClassroomRepository implements ClassroomRepository {
   }
 
   @override
+  Future<List<SavedClassroomSummary>> getMyClassrooms() async {
+    return _classrooms.values
+        .where((classroom) => classroom.shareCode != 'preview')
+        .map(
+          (classroom) => SavedClassroomSummary(
+            id: classroom.id,
+            shareCode: classroom.shareCode,
+            ownerName: classroom.ownerName,
+            memberCount: classroom.members.length,
+            createdAt: DateTime(2026),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> deleteMyClassroom(String shareCode) async {
+    _classrooms.remove(shareCode);
+  }
+
+  @override
   Future<JoinClassroomResult> joinClassroom(
     JoinClassroomCommand command,
   ) async {

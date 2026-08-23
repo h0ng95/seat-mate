@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/app_colors.dart';
@@ -7,12 +8,18 @@ import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../character/presentation/pixel_character.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../auth/presentation/kakao_login_button.dart';
+import '../../classroom/application/classroom_providers.dart';
 
-class LandingPage extends StatelessWidget {
+class LandingPage extends ConsumerWidget {
   const LandingPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final config = ref.watch(appConfigProvider);
+    final authState = ref.watch(authUserProvider);
+    final user = authState.value;
     return AppScaffold(
       showBrand: false,
       padding: EdgeInsets.zero,
@@ -44,11 +51,22 @@ class LandingPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                PrimaryButton(
-                  label: '내 반 만들기',
-                  icon: Icons.auto_awesome_rounded,
-                  onPressed: () => context.go('/create'),
-                ),
+                if (config.hasSupabase && user == null)
+                  const KakaoLoginButton()
+                else
+                  PrimaryButton(
+                    label: '내 반 만들기',
+                    icon: Icons.auto_awesome_rounded,
+                    onPressed: () => context.go('/create'),
+                  ),
+                if (config.hasSupabase && user != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/my'),
+                    icon: const Icon(Icons.school_outlined),
+                    label: const Text('내 반 보기'),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.sm),
                 OutlinedButton.icon(
                   onPressed: () => context.go('/class/preview'),

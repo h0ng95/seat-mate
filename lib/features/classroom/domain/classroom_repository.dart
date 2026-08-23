@@ -40,6 +40,8 @@ abstract interface class ClassroomRepository {
   Future<Classroom> createClassroom(CreateClassroomCommand command);
   Future<Classroom> getClassroom(String shareCode);
   Future<JoinClassroomResult> joinClassroom(JoinClassroomCommand command);
+  Future<List<SavedClassroomSummary>> getMyClassrooms();
+  Future<void> deleteMyClassroom(String shareCode);
 }
 
 class ClassroomFullException implements Exception {

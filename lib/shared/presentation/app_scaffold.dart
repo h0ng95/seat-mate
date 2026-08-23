@@ -125,7 +125,7 @@ class _AppBottomNavigation extends StatelessWidget {
     final path =
         GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
         '/';
-    final selectedIndex = path.startsWith('/class')
+    final selectedIndex = path.startsWith('/class') || path.startsWith('/my')
         ? 2
         : path.startsWith('/create')
         ? 1
@@ -154,7 +154,7 @@ class _AppBottomNavigation extends StatelessWidget {
                   case 1:
                     context.go('/create');
                   case 2:
-                    context.go('/class/preview');
+                    context.go('/my');
                 }
               },
               destinations: const [
@@ -171,7 +171,7 @@ class _AppBottomNavigation extends StatelessWidget {
                 NavigationDestination(
                   icon: Icon(Icons.favorite_border_rounded),
                   selectedIcon: Icon(Icons.favorite_rounded),
-                  label: '우리 반',
+                  label: '내 반',
                 ),
               ],
             ),
