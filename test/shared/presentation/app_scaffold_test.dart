@@ -87,13 +87,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(NavigationBar), findsNothing);
     expect(find.text('내 반 만들기'), findsNothing);
-    expect(find.text('내 반'), findsOneWidget);
-
-    await tester.tap(find.text('내 반'));
-    await tester.pumpAndSettle();
-
-    expect(router.routeInformationProvider.value.uri.path, '/class/saved123');
+    expect(router.routeInformationProvider.value.uri.path, '/');
   });
 }
 

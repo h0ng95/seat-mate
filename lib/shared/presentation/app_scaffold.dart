@@ -128,18 +128,18 @@ class _AppBottomNavigation extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(appConfigProvider);
     final user = ref.watch(authUserProvider).value;
+    final activeShareCode = ref.watch(activeClassroomShareCodeProvider);
     final classroomsState = config.hasSupabase && user != null
         ? ref.watch(savedClassroomsProvider(user.id))
         : null;
     final classrooms = classroomsState?.value ?? const [];
-    final existingClassroom = classrooms.isEmpty ? null : classrooms.first;
-    final hasExistingClassroom = existingClassroom != null;
+    if (activeShareCode != null || classrooms.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
     final path =
         GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
         '/';
-    final selectedIndex = hasExistingClassroom
-        ? (path.startsWith('/class') || path.startsWith('/my') ? 1 : 0)
-        : path.startsWith('/class') || path.startsWith('/my')
+    final selectedIndex = path.startsWith('/class') || path.startsWith('/my')
         ? 2
         : path.startsWith('/create')
         ? 1
@@ -162,14 +162,6 @@ class _AppBottomNavigation extends ConsumerWidget {
             child: NavigationBar(
               selectedIndex: selectedIndex,
               onDestinationSelected: (index) async {
-                if (hasExistingClassroom) {
-                  if (index == 0) {
-                    context.go('/');
-                  } else {
-                    context.go('/class/${existingClassroom.shareCode}');
-                  }
-                  return;
-                }
                 switch (index) {
                   case 0:
                     context.go('/');
@@ -179,36 +171,23 @@ class _AppBottomNavigation extends ConsumerWidget {
                     await openMyClassrooms(context, ref);
                 }
               },
-              destinations: hasExistingClassroom
-                  ? const [
-                      NavigationDestination(
-                        icon: Icon(Icons.home_outlined),
-                        selectedIcon: Icon(Icons.home_rounded),
-                        label: '시작',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.favorite_border_rounded),
-                        selectedIcon: Icon(Icons.favorite_rounded),
-                        label: '내 반',
-                      ),
-                    ]
-                  : const [
-                      NavigationDestination(
-                        icon: Icon(Icons.home_outlined),
-                        selectedIcon: Icon(Icons.home_rounded),
-                        label: '시작',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.add_box_outlined),
-                        selectedIcon: Icon(Icons.add_box_rounded),
-                        label: '내 반 만들기',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.favorite_border_rounded),
-                        selectedIcon: Icon(Icons.favorite_rounded),
-                        label: '내 반',
-                      ),
-                    ],
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: '시작',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.add_box_outlined),
+                  selectedIcon: Icon(Icons.add_box_rounded),
+                  label: '내 반 만들기',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.favorite_border_rounded),
+                  selectedIcon: Icon(Icons.favorite_rounded),
+                  label: '내 반',
+                ),
+              ],
             ),
           ),
         ),

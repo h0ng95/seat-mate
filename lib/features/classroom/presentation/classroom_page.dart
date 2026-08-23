@@ -34,18 +34,21 @@ class ClassroomPage extends ConsumerWidget {
     final config = ref.watch(appConfigProvider);
     final authState = ref.watch(authUserProvider);
     final user = authState.value;
+    final activeShareCode = ref.watch(activeClassroomShareCodeProvider);
     AsyncValue<List<SavedClassroomSummary>>? savedClassroomsState;
     if (config.hasSupabase && user != null) {
       savedClassroomsState = ref.watch(savedClassroomsProvider(user.id));
     }
     final savedClassrooms = savedClassroomsState?.value ?? const [];
-    final isViewerOwner = savedClassrooms.any(
-      (classroom) => classroom.shareCode == shareCode,
-    );
+    final isViewerOwner =
+        activeShareCode == shareCode ||
+        savedClassrooms.any((classroom) => classroom.shareCode == shareCode);
     final canCreateClassroom =
         !config.hasSupabase ||
         (!authState.isLoading && user == null) ||
-        (savedClassroomsState?.hasValue == true && savedClassrooms.isEmpty);
+        (activeShareCode == null &&
+            savedClassroomsState?.hasValue == true &&
+            savedClassrooms.isEmpty);
     final classroomState = ref.watch(classroomProvider(shareCode));
     return AppScaffold(
       actions: [

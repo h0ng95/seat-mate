@@ -41,6 +41,9 @@ class AuthController extends Notifier<AsyncValue<void>?> {
     state = await AsyncValue.guard(
       () => Supabase.instance.client.auth.signOut(),
     );
+    if (state?.hasValue ?? false) {
+      ref.read(activeClassroomShareCodeProvider.notifier).clear();
+    }
   }
 }
 

@@ -71,6 +71,13 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
       return const AppScaffold(child: _CreateLoginRequired());
     }
 
+    final activeShareCode = ref.watch(activeClassroomShareCodeProvider);
+    if (activeShareCode != null) {
+      return AppScaffold(
+        child: _ExistingClassroomRedirect(shareCode: activeShareCode),
+      );
+    }
+
     final user = authState.value;
     if (config.hasSupabase && user != null) {
       final classroomsState = ref.watch(savedClassroomsProvider(user.id));
@@ -354,6 +361,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     if (error case ClassroomAlreadyExistsException(:final shareCode)) {
       if (!mounted) return;
       if (shareCode != null) {
+        ref.read(activeClassroomShareCodeProvider.notifier).remember(shareCode);
         context.go('/class/$shareCode');
       } else {
         context.go('/my');

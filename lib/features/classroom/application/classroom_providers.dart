@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/app_config.dart';
+import '../data/active_classroom_storage.dart';
 import '../data/fake_classroom_repository.dart';
 import '../data/supabase_classroom_repository.dart';
 import '../domain/classroom.dart';
@@ -23,6 +24,36 @@ final demoClassroomRepositoryProvider = Provider<FakeClassroomRepository>(
   (ref) => FakeClassroomRepository(),
 );
 
+final activeClassroomStorageProvider = Provider<ActiveClassroomStorage>(
+  (ref) => MemoryActiveClassroomStorage(),
+);
+
+class ActiveClassroomController extends Notifier<String?> {
+  @override
+  String? build() => ref.watch(activeClassroomStorageProvider).read();
+
+  void remember(String shareCode) {
+    state = shareCode;
+    ref.read(activeClassroomStorageProvider).write(shareCode);
+  }
+
+  void forget(String shareCode) {
+    if (state != shareCode) return;
+    state = null;
+    ref.read(activeClassroomStorageProvider).clear();
+  }
+
+  void clear() {
+    state = null;
+    ref.read(activeClassroomStorageProvider).clear();
+  }
+}
+
+final activeClassroomShareCodeProvider =
+    NotifierProvider<ActiveClassroomController, String?>(
+      ActiveClassroomController.new,
+    );
+
 final classroomProvider = FutureProvider.family<Classroom, String>((
   ref,
   shareCode,
@@ -34,8 +65,19 @@ final classroomProvider = FutureProvider.family<Classroom, String>((
 });
 
 final savedClassroomsProvider =
-    FutureProvider.family<List<SavedClassroomSummary>, String>((ref, ownerId) {
-      return ref.watch(classroomRepositoryProvider).getMyClassrooms();
+    FutureProvider.family<List<SavedClassroomSummary>, String>((
+      ref,
+      ownerId,
+    ) async {
+      final classrooms = await ref
+          .watch(classroomRepositoryProvider)
+          .getMyClassrooms();
+      if (classrooms.isNotEmpty) {
+        ref
+            .read(activeClassroomShareCodeProvider.notifier)
+            .remember(classrooms.first.shareCode);
+      }
+      return classrooms;
     });
 
 class CreateClassroomController extends Notifier<AsyncValue<Classroom>?> {
@@ -49,7 +91,12 @@ class CreateClassroomController extends Notifier<AsyncValue<Classroom>?> {
       () => ref.read(classroomRepositoryProvider).createClassroom(command),
     );
     state = result;
-    if (result.hasValue) ref.invalidate(savedClassroomsProvider);
+    if (result.value case final classroom?) {
+      ref
+          .read(activeClassroomShareCodeProvider.notifier)
+          .remember(classroom.shareCode);
+      ref.invalidate(savedClassroomsProvider);
+    }
     return result.value;
   }
 }
@@ -96,7 +143,10 @@ class DeleteClassroomController extends Notifier<AsyncValue<void>?> {
       () => ref.read(classroomRepositoryProvider).deleteMyClassroom(shareCode),
     );
     state = result;
-    if (result.hasValue) ref.invalidate(savedClassroomsProvider);
+    if (result.hasValue) {
+      ref.read(activeClassroomShareCodeProvider.notifier).forget(shareCode);
+      ref.invalidate(savedClassroomsProvider);
+    }
     return result.hasValue;
   }
 }

@@ -6,6 +6,11 @@ import '../features/auth/application/auth_providers.dart';
 import '../features/classroom/application/classroom_providers.dart';
 
 Future<void> openMyClassrooms(BuildContext context, WidgetRef ref) async {
+  final activeShareCode = ref.read(activeClassroomShareCodeProvider);
+  if (activeShareCode != null) {
+    if (context.mounted) context.go('/class/$activeShareCode');
+    return;
+  }
   final config = ref.read(appConfigProvider);
   final authState = ref.read(authUserProvider);
   var user = authState.value;

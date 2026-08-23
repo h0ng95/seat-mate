@@ -6,6 +6,7 @@ import '../../../app/app_colors.dart';
 import '../../../app/app_constants.dart';
 import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
+import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../character/presentation/pixel_character.dart';
 import '../../character/domain/character_gender.dart';
@@ -21,11 +22,16 @@ class LandingPage extends ConsumerWidget {
     final config = ref.watch(appConfigProvider);
     final authState = ref.watch(authUserProvider);
     final user = authState.value;
+    final activeShareCode = ref.watch(activeClassroomShareCodeProvider);
     final classroomsState = config.hasSupabase && user != null
         ? ref.watch(savedClassroomsProvider(user.id))
         : null;
     final classrooms = classroomsState?.value ?? const [];
     final existingClassroom = classrooms.isEmpty ? null : classrooms.first;
+    final existingShareCode = activeShareCode ?? existingClassroom?.shareCode;
+    if (existingShareCode != null) {
+      return _ActiveClassroomRedirect(shareCode: existingShareCode);
+    }
     return AppScaffold(
       showBrand: false,
       padding: EdgeInsets.zero,
@@ -59,13 +65,6 @@ class LandingPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 if (config.hasSupabase && user == null)
                   const KakaoLoginButton()
-                else if (existingClassroom != null)
-                  PrimaryButton(
-                    label: '내 반 들어가기',
-                    icon: Icons.school_rounded,
-                    onPressed: () =>
-                        context.go('/class/${existingClassroom.shareCode}'),
-                  )
                 else if (classroomsState?.isLoading == true)
                   const PrimaryButton(
                     label: '내 반 확인 중...',
@@ -98,6 +97,38 @@ class LandingPage extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActiveClassroomRedirect extends StatefulWidget {
+  const _ActiveClassroomRedirect({required this.shareCode});
+
+  final String shareCode;
+
+  @override
+  State<_ActiveClassroomRedirect> createState() =>
+      _ActiveClassroomRedirectState();
+}
+
+class _ActiveClassroomRedirectState extends State<_ActiveClassroomRedirect> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go('/class/${widget.shareCode}');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppScaffold(
+      showBrand: false,
+      showNavigation: false,
+      child: SizedBox(
+        height: 420,
+        child: Center(child: ChalkLoading(messages: ['내 반으로 돌아가는 중...'])),
       ),
     );
   }
