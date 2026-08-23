@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_colors.dart';
@@ -82,6 +85,7 @@ class _ClassroomContent extends StatefulWidget {
 }
 
 class _ClassroomContentState extends State<_ClassroomContent> {
+  final _captureKey = GlobalKey();
   late Classroom _classroom;
   ClassroomSceneMember? _enteringMember;
   JoinClassroomResult? _pendingResult;
@@ -108,48 +112,69 @@ class _ClassroomContentState extends State<_ClassroomContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Text(
-                '${_classroom.ownerName.display}이네 반',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ),
-            Text(
-              '${_classroom.members.length} / 9명',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
-          child: Text(
-            _enteringMember == null
-                ? (_classroom.isFull ? '아홉 자리가 모두 찼어요!' : '오늘도 전학생을 기다리는 중')
-                : '새로운 전학생이 왔어요!',
-            key: ValueKey(_enteringMember?.name ?? _classroom.members.length),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: _enteringMember == null
-                  ? AppColors.inkSoft
-                  : AppColors.coral,
-              fontWeight: FontWeight.w700,
+        RepaintBoundary(
+          key: _captureKey,
+          child: ColoredBox(
+            color: AppColors.paper,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${_classroom.ownerName.display}이네 반',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                    ),
+                    Text(
+                      '${_classroom.members.length} / 9명',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Text(
+                    _enteringMember == null
+                        ? (_classroom.isFull
+                              ? '아홉 자리가 모두 찼어요!'
+                              : '오늘도 전학생을 기다리는 중')
+                        : '새로운 전학생이 왔어요!',
+                    key: ValueKey(
+                      _enteringMember?.name ?? _classroom.members.length,
+                    ),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: _enteringMember == null
+                          ? AppColors.inkSoft
+                          : AppColors.coral,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ClassroomScene(
+                  members: sceneMembers,
+                  enteringMember: _enteringMember,
+                  onEntryComplete: _completeEntry,
+                  onMemberTap: (member) => showMemberResultSheet(
+                    context,
+                    member,
+                    shareCode: _classroom.shareCode,
+                    ownerName: _classroom.ownerName.display,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        ClassroomScene(
-          members: sceneMembers,
-          enteringMember: _enteringMember,
-          onEntryComplete: _completeEntry,
-          onMemberTap: (member) => showMemberResultSheet(
-            context,
-            member,
-            shareCode: _classroom.shareCode,
-            ownerName: _classroom.ownerName.display,
-          ),
+        const SizedBox(height: AppSpacing.sm),
+        OutlinedButton.icon(
+          onPressed: _saveClassroomImage,
+          icon: const Icon(Icons.download_rounded),
+          label: const Text('교실 이미지 저장'),
         ),
         const SizedBox(height: AppSpacing.lg),
         JoinClassroomForm(
@@ -159,6 +184,35 @@ class _ClassroomContentState extends State<_ClassroomContent> {
         ),
       ],
     );
+  }
+
+  Future<void> _saveClassroomImage() async {
+    final renderObject = _captureKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderRepaintBoundary) return;
+    try {
+      final image = await renderObject.toImage(pixelRatio: 2.5);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null || !mounted) return;
+      final outcome = await ProviderScope.containerOf(context)
+          .read(shareServiceProvider)
+          .sharePng(
+            bytes: byteData.buffer.asUint8List(),
+            fileName: 'seat-mate-${_classroom.shareCode}.png',
+            text: '${_classroom.ownerName.display}이네 반 자리표',
+          );
+      if (!mounted || outcome == ShareOutcome.dismissed) return;
+      final message = outcome == ShareOutcome.shared
+          ? '이미지 공유 화면을 열었어요.'
+          : '교실 이미지를 저장했어요.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이미지를 만드는 데 실패했어요. 다시 시도해 주세요.')),
+      );
+    }
   }
 
   void _handleJoinResult(JoinClassroomResult result) {

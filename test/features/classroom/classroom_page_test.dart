@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,6 +81,15 @@ class _RecordingShareService implements ShareService {
     required String url,
   }) async {
     lastUrl = url;
+    return ShareOutcome.shared;
+  }
+
+  @override
+  Future<ShareOutcome> sharePng({
+    required Uint8List bytes,
+    required String fileName,
+    required String text,
+  }) async {
     return ShareOutcome.shared;
   }
 }

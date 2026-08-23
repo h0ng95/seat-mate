@@ -5,6 +5,11 @@ enum ShareOutcome { shared, copied, dismissed }
 
 abstract interface class ShareService {
   Future<ShareOutcome> shareText({required String text, required String url});
+  Future<ShareOutcome> sharePng({
+    required Uint8List bytes,
+    required String fileName,
+    required String text,
+  });
 }
 
 class PlatformShareService implements ShareService {
@@ -32,5 +37,26 @@ class PlatformShareService implements ShareService {
     }
     await Clipboard.setData(ClipboardData(text: url));
     return ShareOutcome.copied;
+  }
+
+  @override
+  Future<ShareOutcome> sharePng({
+    required Uint8List bytes,
+    required String fileName,
+    required String text,
+  }) async {
+    final result = await _sharePlus.share(
+      ShareParams(
+        text: text,
+        files: [XFile.fromData(bytes, mimeType: 'image/png')],
+        fileNameOverrides: [fileName],
+        downloadFallbackEnabled: true,
+      ),
+    );
+    return switch (result.status) {
+      ShareResultStatus.success => ShareOutcome.shared,
+      ShareResultStatus.dismissed => ShareOutcome.dismissed,
+      ShareResultStatus.unavailable => ShareOutcome.copied,
+    };
   }
 }
