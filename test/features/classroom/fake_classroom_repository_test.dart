@@ -38,4 +38,28 @@ void main() {
     expect(occupied.toSet(), hasLength(occupied.length));
     expect(result.classroom.members, hasLength(5));
   });
+
+  test('blocks a tenth member when all nine seats are occupied', () async {
+    final repository = FakeClassroomRepository();
+    for (var index = 0; index < 5; index++) {
+      await repository.joinClassroom(
+        JoinClassroomCommand(
+          shareCode: 'preview',
+          name: Nickname('친구$index'),
+          birthDate: LocalDate(2000, 1, index + 1),
+        ),
+      );
+    }
+
+    expect(
+      () => repository.joinClassroom(
+        JoinClassroomCommand(
+          shareCode: 'preview',
+          name: Nickname('열번째'),
+          birthDate: LocalDate.parseIso('2001-01-01'),
+        ),
+      ),
+      throwsA(isA<ClassroomFullException>()),
+    );
+  });
 }

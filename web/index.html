@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -44,8 +44,21 @@
 
   <title>내 반에 앉아봐</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #f7f3ea; }
+    #boot-loading {
+      position: fixed; inset: 0; display: grid; place-content: center;
+      gap: 14px; color: #332f2c; font: 600 15px/1.5 sans-serif;
+      text-align: center;
+    }
+    #boot-chalk { width: 34px; height: 7px; margin: auto; background: #fefcf6; border: 1px solid #d8cfc1; }
+  </style>
 </head>
 <body>
+  <div id="boot-loading" role="status">
+    <div id="boot-chalk"></div>
+    <span>칠판 닦는 중...</span>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -55,5 +68,10 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      document.getElementById('boot-loading')?.remove();
+    });
+  </script>
 </body>
 </html>
