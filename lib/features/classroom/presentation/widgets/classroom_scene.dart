@@ -178,29 +178,6 @@ class _ClassroomSceneState extends State<ClassroomScene> {
                   ),
                 ),
                 Positioned(
-                  right: constraints.maxWidth * 0.255,
-                  bottom: constraints.maxHeight * 0.032,
-                  width: constraints.maxWidth * 0.14,
-                  height: constraints.maxHeight * 0.075,
-                  child: Transform.rotate(
-                    angle: -0.035,
-                    child: const Align(
-                      alignment: Alignment.topRight,
-                      child: Text(
-                        '떠든 사람 누구?',
-                        maxLines: 1,
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: Color(0xC7FEFCF6),
-                          fontSize: 8,
-                          height: 1,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
                   left: constraints.maxWidth * 0.055,
                   right: constraints.maxWidth * 0.055,
                   top: constraints.maxHeight * 0.29,
