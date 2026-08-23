@@ -22,11 +22,11 @@ class SeatAssignmentAnimation extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final gridLeft = constraints.maxWidth * 0.085;
-            final gridTop = constraints.maxHeight * 0.313;
+            final gridTop = constraints.maxHeight * 0.3;
             const gridHorizontalGap = 5.0;
             const gridVerticalGap = 5.0;
             final gridWidth = constraints.maxWidth - gridLeft * 2;
-            final gridHeight = constraints.maxHeight * 0.577;
+            final gridHeight = constraints.maxHeight * 0.56;
             final cellWidth = (gridWidth - gridHorizontalGap * 2) / 3;
             final cellHeight = (gridHeight - gridVerticalGap * 2) / 3;
             final column = seatIndex % 3;

@@ -43,7 +43,7 @@ class ClassroomScene extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/classroom-room-v2.png',
+                    'assets/images/classroom-room-v3.png',
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.none,
                     semanticLabel: '나무 바닥과 칠판, 창문, 책장이 있는 도트 교실',
@@ -74,8 +74,8 @@ class ClassroomScene extends StatelessWidget {
                 Positioned(
                   left: constraints.maxWidth * 0.085,
                   right: constraints.maxWidth * 0.085,
-                  top: constraints.maxHeight * 0.313,
-                  bottom: constraints.maxHeight * 0.11,
+                  top: constraints.maxHeight * 0.3,
+                  bottom: constraints.maxHeight * 0.14,
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.zero,
@@ -84,7 +84,7 @@ class ClassroomScene extends StatelessWidget {
                           crossAxisCount: 3,
                           crossAxisSpacing: 5,
                           mainAxisSpacing: 5,
-                          childAspectRatio: 1.02,
+                          childAspectRatio: 1.15,
                         ),
                     itemCount: 9,
                     itemBuilder: (context, index) {
