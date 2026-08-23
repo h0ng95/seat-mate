@@ -7,6 +7,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('내 반에 앉아봐'), findsOneWidget);
-    expect(find.text('내 반 만들기'), findsOneWidget);
+    expect(find.text('내 반 만들기'), findsWidgets);
   });
 }

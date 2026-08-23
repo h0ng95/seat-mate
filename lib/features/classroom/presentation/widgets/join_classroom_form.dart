@@ -51,7 +51,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
           children: [
             Text('우리 반 완성!', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: AppSpacing.xs),
-            const Text('아홉 인연이 모두 모였어요. 이제 나만의 관계 교실을 만들어보세요.'),
+            const Text('아홉 인연이 모두 모였어요. 이제 나만의 반을 만들어보세요.'),
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
               label: '내 반 만들기',
@@ -93,7 +93,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '양력 생일로 원국을 계산해 하트 궁합과 관계 풀이를 보여드려요.',
+              '양력 생일로 원국을 계산해 케미 지수와 우리 사이 풀이를 보여드려요.',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
@@ -130,7 +130,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
             ],
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
-              label: isLoading ? '관계 기운을 읽는 중...' : '내 자리와 하트 궁합 보기',
+              label: isLoading ? '우리 사이를 읽는 중...' : '내 자리와 케미 보기',
               isLoading: isLoading,
               onPressed: isLoading ? null : _join,
             ),

@@ -20,7 +20,7 @@ class CompatibilityRankingBoard extends StatelessWidget {
     final ranked = rankByCompatibility(members);
     return Semantics(
       container: true,
-      label: '$ownerName님과 친구들의 명리 궁합 순위',
+      label: '$ownerName님과 친구들의 케미 지수 순위',
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: AppColors.board,
@@ -51,7 +51,7 @@ class CompatibilityRankingBoard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
-                        '우리 반 궁합 순위',
+                        '우리 반 케미 순위',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.chalk,
                           fontWeight: FontWeight.w900,
@@ -112,7 +112,7 @@ class CompatibilityRankingBoard extends StatelessWidget {
                   ],
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '관계의 가치가 아닌 명리 궁합 계산 점수 순이에요.',
+                  '친밀도 순위가 아닌 명리 계산 기반 케미 지수 순이에요.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.chalk.withValues(alpha: 0.68),

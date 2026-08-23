@@ -136,7 +136,7 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${_classroom.ownerName.display}의 관계 교실',
+                                '${_classroom.ownerName.display}이네 반',
                                 style: Theme.of(
                                   context,
                                 ).textTheme.headlineMedium,
@@ -148,7 +148,7 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                                   _enteringMember == null
                                       ? (_classroom.isFull
                                             ? '아홉 인연이 모두 모였어요!'
-                                            : '친구가 들어올 때마다 관계 풀이가 열려요.')
+                                            : '친구가 들어올 때마다 우리 사이 풀이가 열려요.')
                                       : '새로운 인연이 자리를 찾았어요!',
                                   key: ValueKey(
                                     _enteringMember?.name ??

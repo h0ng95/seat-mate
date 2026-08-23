@@ -98,7 +98,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    '내 관계 교실 만들기',
+                    '내 반 만들기',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: AppSpacing.xs),

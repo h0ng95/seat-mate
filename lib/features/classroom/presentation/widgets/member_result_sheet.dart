@@ -69,7 +69,7 @@ class MemberResultSheet extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    member.isOwner ? '나의 사주 원국' : '전통 명리 관계 풀이',
+                    member.isOwner ? '나의 사주 원국' : '명리로 보는 우리 사이',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -129,7 +129,7 @@ class MemberResultSheet extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      '네 항목을 더한 값이 하트 궁합 점수예요.',
+                      '네 항목을 더한 값이 케미 지수예요.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.inkSoft,
                       ),
@@ -141,7 +141,7 @@ class MemberResultSheet extends ConsumerWidget {
                     ],
                     const SizedBox(height: AppSpacing.xl),
                     Text(
-                      '관계 명리 풀이',
+                      '명리로 보는 우리 사이',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -167,7 +167,7 @@ class MemberResultSheet extends ConsumerWidget {
                     _ReadingRow(
                       icon: Icons.favorite_rounded,
                       color: AppColors.coral,
-                      title: '오래 가는 관계 팁',
+                      title: '오래 가는 사이 팁',
                       body: compatibility.advice,
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -191,7 +191,7 @@ class MemberResultSheet extends ConsumerWidget {
                   FilledButton.icon(
                     onPressed: () => _shareResult(context, ref),
                     icon: const Icon(Icons.ios_share_rounded),
-                    label: const Text('관계 결과 공유하기'),
+                    label: const Text('우리 사이 결과 공유하기'),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   OutlinedButton.icon(
@@ -219,7 +219,7 @@ class MemberResultSheet extends ConsumerWidget {
     final compatibility = member.compatibility;
     final scoreText = compatibility == null
         ? ''
-        : ' 명리 궁합 ${compatibility.heartScore}%,';
+        : ' 케미 지수 ${compatibility.heartScore}%,';
     final outcome = await ref
         .read(shareServiceProvider)
         .shareText(
@@ -340,7 +340,7 @@ class _HeartScorePanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '명리 궁합 점수',
+                    '케미 지수',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.coral,
                       fontWeight: FontWeight.w900,

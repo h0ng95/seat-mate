@@ -171,7 +171,7 @@ class _AppBottomNavigation extends StatelessWidget {
                 NavigationDestination(
                   icon: Icon(Icons.favorite_border_rounded),
                   selectedIcon: Icon(Icons.favorite_rounded),
-                  label: '관계 교실',
+                  label: '우리 반',
                 ),
               ],
             ),

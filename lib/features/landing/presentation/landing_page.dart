@@ -37,7 +37,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '생일로 읽는 우리 사이\n친구가 들어올수록 관계 교실이 채워져요.',
+                  '생일로 읽는 우리 사이\n친구가 들어올수록 우리 반이 채워져요.',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: AppColors.inkSoft),
@@ -45,7 +45,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 PrimaryButton(
-                  label: '내 관계 교실 만들기',
+                  label: '내 반 만들기',
                   icon: Icons.auto_awesome_rounded,
                   onPressed: () => context.go('/create'),
                 ),
@@ -134,7 +134,7 @@ class _LandingMascotBand extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
-                        '우리 하트 궁합은 몇 퍼센트?',
+                        '우리 케미는 몇 퍼센트?',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w900,
                         ),
@@ -162,7 +162,7 @@ class _LandingSignals extends StatelessWidget {
           child: _Signal(icon: Icons.cake_rounded, label: '생일로 찾는 자리'),
         ),
         Expanded(
-          child: _Signal(icon: Icons.favorite_rounded, label: '하트 관계 풀이'),
+          child: _Signal(icon: Icons.favorite_rounded, label: '우리 사이 풀이'),
         ),
         Expanded(
           child: _Signal(icon: Icons.link_rounded, label: '링크로 함께하기'),

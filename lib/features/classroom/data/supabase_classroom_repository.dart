@@ -80,7 +80,7 @@ class SupabaseClassroomRepository implements ClassroomRepository {
         .firstWhere((member) => member.isOwner)
         .sajuChart;
     if (ownerSajuChart == null) {
-      throw StateError('이 교실은 이전 계산 방식으로 만들어져 새 궁합 분석을 지원하지 않습니다.');
+      throw StateError('이 교실은 이전 계산 방식으로 만들어져 새 케미 분석을 지원하지 않습니다.');
     }
     final calculated = _algorithm.deriveMember(
       classroomCode: current.shareCode,
