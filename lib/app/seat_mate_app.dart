@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_constants.dart';
 import 'app_router.dart';
+import 'app_theme.dart';
 
 class SeatMateApp extends StatelessWidget {
   const SeatMateApp({super.key});
@@ -12,10 +13,7 @@ class SeatMateApp extends StatelessWidget {
       title: AppConstants.serviceName,
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3D6652)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
     );
   }
 }

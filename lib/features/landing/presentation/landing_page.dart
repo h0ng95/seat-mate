@@ -2,25 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/app_constants.dart';
+import '../../../app/app_spacing.dart';
+import '../../../shared/presentation/app_scaffold.dart';
+import '../../../shared/presentation/primary_button.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(AppConstants.serviceName),
-            const Text(AppConstants.serviceTagline),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => context.go('/create'),
-              child: const Text('내 반 만들기'),
-            ),
-          ],
+    return AppScaffold(
+      showBrand: false,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height - 96,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppConstants.serviceName,
+                style: Theme.of(context).textTheme.displaySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                AppConstants.serviceTagline,
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              PrimaryButton(
+                label: '내 반 만들기',
+                icon: Icons.add_rounded,
+                onPressed: () => context.go('/create'),
+              ),
+            ],
+          ),
         ),
       ),
     );
