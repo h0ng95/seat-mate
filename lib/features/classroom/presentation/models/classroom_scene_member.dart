@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/relationship.dart';
+import '../../domain/saju_chart.dart';
+import '../../domain/saju_compatibility.dart';
 
 class ClassroomSceneMember {
   const ClassroomSceneMember({
@@ -13,7 +14,9 @@ class ClassroomSceneMember {
     required this.joyDelta,
     required this.color,
     required this.characterSeed,
-    required this.fortune,
+    required this.sajuChart,
+    required this.ownerSajuChart,
+    required this.compatibility,
     this.isOwner = false,
   });
 
@@ -26,6 +29,8 @@ class ClassroomSceneMember {
   final int joyDelta;
   final Color color;
   final String characterSeed;
-  final RelationshipFortune? fortune;
+  final SajuChart? sajuChart;
+  final SajuChart? ownerSajuChart;
+  final SajuCompatibility? compatibility;
   final bool isOwner;
 }

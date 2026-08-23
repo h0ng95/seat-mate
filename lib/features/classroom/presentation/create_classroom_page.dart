@@ -14,6 +14,7 @@ import '../../character/presentation/pixel_character.dart';
 import '../application/classroom_providers.dart';
 import '../domain/birth_profile.dart';
 import '../domain/classroom_repository.dart';
+import '../domain/saju_chart.dart';
 import '../domain/seat_mate_algorithm.dart';
 
 enum _CreatePhase { input, calculating, result }
@@ -59,7 +60,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
             height: 420,
             child: Center(
               child: ChalkLoading(
-                messages: ['칠판 닦는 중...', '책상 옮기는 중...', '당신의 자리를 찾는 중...'],
+                messages: ['절기표 확인 중...', '사주 원국 계산 중...', '당신의 자리를 찾는 중...'],
               ),
             ),
           ),
@@ -215,13 +216,15 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.md),
+        _OwnerChartSummary(chart: ownerResult.sajuChart),
         if (errorMessage != null) ...[
           const SizedBox(height: AppSpacing.md),
           Text(errorMessage, style: const TextStyle(color: AppColors.error)),
         ],
         const SizedBox(height: AppSpacing.lg),
         PrimaryButton(
-          label: '이 자리로 반 만들기',
+          label: '이 원국으로 반 만들기',
           icon: Icons.school_rounded,
           isLoading: isLoading,
           onPressed: isLoading ? null : _createClassroom,
@@ -329,6 +332,93 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     const rows = ['앞줄', '가운데 줄', '뒷줄'];
     const columns = ['창가', '가운데', '문 쪽'];
     return '${columns[seatIndex % 3]} ${rows[seatIndex ~/ 3]} 자리';
+  }
+}
+
+class _OwnerChartSummary extends StatelessWidget {
+  const _OwnerChartSummary({required this.chart});
+
+  final SajuChart chart;
+
+  @override
+  Widget build(BuildContext context) {
+    final values = [
+      ('년주', chart.year.hanja),
+      ('월주', chart.month.hanja),
+      ('일주', chart.day.hanja),
+      ('시주', chart.hour?.hanja ?? '--'),
+    ];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.paperGreen,
+        border: Border.all(color: AppColors.leaf),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.fact_check_outlined,
+                  size: 20,
+                  color: AppColors.board,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    chart.depth.label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (final value in values)
+                  Container(
+                    width: 62,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.chalk,
+                      border: Border.all(color: AppColors.line),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          value.$1,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          value.$2,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              chart.depth.description,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

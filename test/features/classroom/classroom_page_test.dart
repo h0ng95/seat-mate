@@ -32,6 +32,11 @@ void main() {
   testWidgets('opens a relationship sheet for an occupied seat', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(home: ClassroomPage(shareCode: 'preview')),
@@ -42,8 +47,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('seat-5')));
     await tester.pumpAndSettle();
 
-    expect(find.text('하트 궁합'), findsOneWidget);
-    expect(find.text('관계 사주 풀이'), findsOneWidget);
+    expect(find.text('명리 궁합 점수'), findsOneWidget);
+    expect(find.text('두 사람의 원국'), findsOneWidget);
+    expect(find.text('점수 계산 근거'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('shares the classroom URL from the top action', (tester) async {

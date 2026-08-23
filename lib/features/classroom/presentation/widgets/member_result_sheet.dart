@@ -8,6 +8,8 @@ import '../../../character/presentation/pixel_character.dart';
 import '../../../sharing/application/share_providers.dart';
 import '../../../sharing/application/share_service.dart';
 import '../../application/classroom_providers.dart';
+import '../../domain/saju_chart.dart';
+import '../../domain/saju_compatibility.dart';
 import '../models/classroom_scene_member.dart';
 
 Future<void> showMemberResultSheet(
@@ -24,7 +26,7 @@ Future<void> showMemberResultSheet(
       borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
     ),
     builder: (context) => FractionallySizedBox(
-      heightFactor: 0.92,
+      heightFactor: 0.94,
       child: MemberResultSheet(
         member: member,
         shareCode: shareCode,
@@ -48,7 +50,8 @@ class MemberResultSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fortune = member.fortune;
+    final compatibility = member.compatibility;
+    final chart = member.sajuChart;
     return SafeArea(
       top: false,
       child: Column(
@@ -66,7 +69,7 @@ class MemberResultSheet extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    member.isOwner ? '나의 자리 운세' : '우리 사이 관계 사주',
+                    member.isOwner ? '나의 사주 원국' : '전통 명리 관계 풀이',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -93,19 +96,57 @@ class MemberResultSheet extends ConsumerWidget {
                 children: [
                   _MemberHeading(member: member, ownerName: ownerName),
                   const SizedBox(height: AppSpacing.lg),
-                  if (fortune != null) ...[
+                  if (compatibility != null &&
+                      chart != null &&
+                      member.ownerSajuChart != null) ...[
                     _HeartScorePanel(
-                      score: fortune.heartScore,
-                      label: fortune.heartLabel,
+                      score: compatibility.heartScore,
+                      label: compatibility.heartLabel,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _AnalysisScope(compatibility: compatibility),
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      '두 사람의 원국',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    _ChartRow(
+                      name: ownerName,
+                      chart: member.ownerSajuChart!,
+                      color: AppColors.board,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _ChartRow(
+                      name: member.name,
+                      chart: chart,
+                      color: AppColors.coral,
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     Text(
-                      '관계 사주 풀이',
+                      '점수 계산 근거',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      fortune.energy,
+                      '네 항목을 더한 값이 하트 궁합 점수예요.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    for (final evidence in compatibility.evidence) ...[
+                      _EvidenceRow(evidence: evidence),
+                      const SizedBox(height: AppSpacing.xs),
+                    ],
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      '관계 명리 풀이',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      compatibility.energy,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -113,43 +154,39 @@ class MemberResultSheet extends ConsumerWidget {
                       icon: Icons.auto_awesome_rounded,
                       color: AppColors.yellow,
                       title: '둘이 빛나는 순간',
-                      body: fortune.strength,
+                      body: compatibility.strength,
                     ),
                     const Divider(height: AppSpacing.xl),
                     _ReadingRow(
-                      icon: Icons.waves_rounded,
+                      icon: Icons.compare_arrows_rounded,
                       color: AppColors.sky,
                       title: '부딪히기 쉬운 지점',
-                      body: fortune.caution,
+                      body: compatibility.caution,
                     ),
                     const Divider(height: AppSpacing.xl),
                     _ReadingRow(
                       icon: Icons.favorite_rounded,
                       color: AppColors.coral,
                       title: '오래 가는 관계 팁',
-                      body: fortune.advice,
+                      body: compatibility.advice,
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                  ] else ...[
+                  ] else if (member.isOwner && chart != null) ...[
+                    _AnalysisScope.forChart(chart),
+                    const SizedBox(height: AppSpacing.lg),
+                    _ChartRow(
+                      name: member.name,
+                      chart: chart,
+                      color: AppColors.board,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
                     _OwnerReading(member: member),
                     const SizedBox(height: AppSpacing.xl),
+                  ] else ...[
+                    const _LegacyResultNotice(),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _Metric(
-                          label: '집중 기운',
-                          value: member.focusDelta,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _Metric(label: '즐거움 기운', value: member.joyDelta),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const _EntertainmentNotice(),
+                  const _MethodNotice(),
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: () => _shareResult(context, ref),
@@ -179,8 +216,10 @@ class MemberResultSheet extends ConsumerWidget {
         .read(appConfigProvider)
         .baseUrl
         .replaceFirst(RegExp(r'/$'), '');
-    final fortune = member.fortune;
-    final scoreText = fortune == null ? '' : ' 하트 궁합 ${fortune.heartScore}%,';
+    final compatibility = member.compatibility;
+    final scoreText = compatibility == null
+        ? ''
+        : ' 명리 궁합 ${compatibility.heartScore}%,';
     final outcome = await ref
         .read(shareServiceProvider)
         .shareText(
@@ -301,7 +340,7 @@ class _HeartScorePanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '하트 궁합',
+                    '명리 궁합 점수',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.coral,
                       fontWeight: FontWeight.w900,
@@ -321,6 +360,222 @@ class _HeartScorePanel extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnalysisScope extends StatelessWidget {
+  const _AnalysisScope({required this.compatibility}) : chart = null;
+
+  const _AnalysisScope.forChart(this.chart) : compatibility = null;
+
+  final SajuCompatibility? compatibility;
+  final SajuChart? chart;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = compatibility?.analysisScope ?? chart!.depth.description;
+    final isDetailed =
+        compatibility?.analysisDepth == SajuAnalysisDepth.fourPillars ||
+        chart?.depth == SajuAnalysisDepth.fourPillars;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDetailed ? AppColors.paperGreen : AppColors.paperBlue,
+        border: Border.all(color: isDetailed ? AppColors.leaf : AppColors.sky),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          children: [
+            Icon(
+              isDetailed ? Icons.verified_rounded : Icons.info_outline_rounded,
+              size: 20,
+              color: isDetailed ? AppColors.board : AppColors.sky,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                scope,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartRow extends StatelessWidget {
+  const _ChartRow({
+    required this.name,
+    required this.chart,
+    required this.color,
+  });
+
+  final String name;
+  final SajuChart chart;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final pillars = [
+      ('년주', chart.year),
+      ('월주', chart.month),
+      ('일주', chart.day),
+      ('시주', chart.hour),
+    ];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.chalk,
+        border: Border(left: BorderSide(color: color, width: 4)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '$name · ${chart.dayMasterKorean}(${_elementLabel(chart.dayMasterElement)}) 일간',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Text(
+                  chart.depth == SajuAnalysisDepth.fourPillars ? '4주' : '3주',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final item in pillars)
+                  _PillarTile(label: item.$1, pillar: item.$2, color: color),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PillarTile extends StatelessWidget {
+  const _PillarTile({
+    required this.label,
+    required this.pillar,
+    required this.color,
+  });
+
+  final String label;
+  final SajuPillarValue? pillar;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      height: 64,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: pillar == null ? AppColors.paper : color.withValues(alpha: 0.08),
+        border: Border.all(
+          color: pillar == null ? AppColors.line : color.withValues(alpha: 0.4),
+        ),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+          ),
+          Text(
+            pillar?.hanja ?? '--',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: pillar == null ? AppColors.inkSoft : color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EvidenceRow extends StatelessWidget {
+  const _EvidenceRow({required this.evidence});
+
+  final CompatibilityEvidence evidence;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.chalk,
+        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    evidence.title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${evidence.score} / ${evidence.maxScore}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.coral,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: evidence.score / evidence.maxScore,
+                minHeight: 4,
+                color: AppColors.board,
+                backgroundColor: AppColors.paperGreen,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              evidence.summary,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -411,41 +666,20 @@ class _OwnerReading extends StatelessWidget {
   }
 }
 
-class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
-
-  final String label;
-  final int value;
+class _LegacyResultNotice extends StatelessWidget {
+  const _LegacyResultNotice();
 
   @override
   Widget build(BuildContext context) {
-    final sign = value > 0 ? '+' : '';
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.chalk,
-        border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Column(
-          children: [
-            Text(label, style: Theme.of(context).textTheme.bodyMedium),
-            Text(
-              '$sign$value%',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: value >= 0 ? AppColors.board : AppColors.coral,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return Text(
+      '이 자리는 이전 계산 방식으로 만들어져 원국과 점수 근거를 표시할 수 없어요. 새 교실에서는 명리 계산 결과가 함께 저장됩니다.',
+      style: Theme.of(context).textTheme.bodyLarge,
     );
   }
 }
 
-class _EntertainmentNotice extends StatelessWidget {
-  const _EntertainmentNotice();
+class _MethodNotice extends StatelessWidget {
+  const _MethodNotice();
 
   @override
   Widget build(BuildContext context) {
@@ -460,14 +694,14 @@ class _EntertainmentNotice extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(
-              Icons.info_outline_rounded,
+              Icons.fact_check_outlined,
               size: 18,
               color: AppColors.sky,
             ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Text(
-                '생년월일의 반복 가능한 패턴을 관계 이야기로 풀어낸 엔터테인먼트 결과예요. 중요한 관계 판단은 실제 대화와 경험을 기준으로 해주세요.',
+                'KST 양력과 절기 경계로 원국을 계산하고, 일간 오행·일지 합충·오행 균형·전체 합충을 합산합니다. 점수는 AI가 임의 생성하지 않습니다. 전통 명리는 과학적으로 검증된 관계 예측 도구가 아니므로 실제 판단은 대화와 경험을 기준으로 해주세요.\n계산 버전: saju-0.1.1 · compatibility-1',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
@@ -479,3 +713,11 @@ class _EntertainmentNotice extends StatelessWidget {
     );
   }
 }
+
+String _elementLabel(String key) => switch (key) {
+  'wood' => '목',
+  'fire' => '화',
+  'earth' => '토',
+  'metal' => '금',
+  _ => '수',
+};

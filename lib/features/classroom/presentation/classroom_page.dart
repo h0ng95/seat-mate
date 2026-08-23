@@ -314,10 +314,11 @@ class _ClassroomContentState extends State<_ClassroomContent> {
       joyDelta: member.joyDelta,
       color: _memberColors[member.seatIndex % _memberColors.length],
       characterSeed: member.characterSeed,
-      fortune: relationship?.fortune(
-        focusDelta: member.focusDelta,
-        joyDelta: member.joyDelta,
-      ),
+      sajuChart: member.sajuChart,
+      ownerSajuChart: classroom.members
+          .firstWhere((item) => item.isOwner)
+          .sajuChart,
+      compatibility: member.compatibility,
       isOwner: member.isOwner,
     );
   }

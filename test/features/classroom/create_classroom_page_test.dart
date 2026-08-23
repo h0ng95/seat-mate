@@ -14,11 +14,11 @@ void main() {
     await tester.tap(find.text('내 자리 운세 보기'));
     await tester.pump();
 
-    expect(find.text('칠판 닦는 중...'), findsOneWidget);
+    expect(find.text('절기표 확인 중...'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pumpAndSettle();
 
     expect(find.text('재홍님의 자리는'), findsOneWidget);
-    expect(find.text('이 자리로 반 만들기'), findsOneWidget);
+    expect(find.text('이 원국으로 반 만들기'), findsOneWidget);
   });
 }

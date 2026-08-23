@@ -135,7 +135,9 @@ class _ClassroomSeatState extends State<ClassroomSeat> {
                                     color: AppColors.yellow,
                                   )
                                 : Text(
-                                    '♥ ${person.fortune!.heartScore}%',
+                                    person.compatibility == null
+                                        ? '♥'
+                                        : '♥ ${person.compatibility!.heartScore}%',
                                     style: const TextStyle(
                                       color: AppColors.coral,
                                       fontSize: 8,
