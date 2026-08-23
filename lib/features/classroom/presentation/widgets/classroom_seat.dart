@@ -286,30 +286,12 @@ class _OwnerSeatBadge extends StatelessWidget {
       label: '우리 반 생성자',
       child: const ExcludeSemantics(
         child: SizedBox(
-          width: 30,
-          height: 30,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Positioned(
-                left: 2,
-                top: 3,
-                child: Icon(
-                  Icons.star_rounded,
-                  size: 27,
-                  color: Color(0xFF735122),
-                ),
-              ),
-              Positioned(
-                left: 3,
-                top: 1,
-                child: Icon(
-                  Icons.star_rounded,
-                  size: 25,
-                  color: AppColors.yellow,
-                ),
-              ),
-            ],
+          width: 24,
+          height: 18,
+          child: Icon(
+            Icons.star_rounded,
+            size: 18,
+            color: AppColors.yellow,
           ),
         ),
       ),
