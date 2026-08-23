@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seat_mate/core/values/local_date.dart';
 import 'package:seat_mate/core/values/nickname.dart';
 import 'package:seat_mate/features/classroom/data/fake_classroom_repository.dart';
+import 'package:seat_mate/features/classroom/domain/birth_profile.dart';
 import 'package:seat_mate/features/classroom/domain/classroom_repository.dart';
 
 void main() {
@@ -12,7 +13,7 @@ void main() {
       final command = JoinClassroomCommand(
         shareCode: 'preview',
         name: Nickname('민수'),
-        birthDate: LocalDate.parseIso('1996-03-17'),
+        birth: BirthProfile(date: LocalDate.parseIso('1996-03-17')),
       );
 
       final result = await repository.joinClassroom(command);
@@ -29,7 +30,7 @@ void main() {
       JoinClassroomCommand(
         shareCode: 'preview',
         name: Nickname('소라'),
-        birthDate: LocalDate.parseIso('1998-02-21'),
+        birth: BirthProfile(date: LocalDate.parseIso('1998-02-21')),
       ),
     );
 
@@ -46,7 +47,7 @@ void main() {
         JoinClassroomCommand(
           shareCode: 'preview',
           name: Nickname('친구$index'),
-          birthDate: LocalDate(2000, 1, index + 1),
+          birth: BirthProfile(date: LocalDate(2000, 1, index + 1)),
         ),
       );
     }
@@ -56,7 +57,7 @@ void main() {
         JoinClassroomCommand(
           shareCode: 'preview',
           name: Nickname('열번째'),
-          birthDate: LocalDate.parseIso('2001-01-01'),
+          birth: BirthProfile(date: LocalDate.parseIso('2001-01-01')),
         ),
       ),
       throwsA(isA<ClassroomFullException>()),

@@ -9,6 +9,7 @@ import '../../../../core/values/nickname.dart';
 import '../../../../shared/presentation/app_text_field.dart';
 import '../../../../shared/presentation/primary_button.dart';
 import '../../application/classroom_providers.dart';
+import '../../domain/birth_profile.dart';
 import '../../domain/classroom_repository.dart';
 
 class JoinClassroomForm extends ConsumerStatefulWidget {
@@ -31,11 +32,13 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _birthController = TextEditingController();
+  final _birthTimeController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _birthController.dispose();
+    _birthTimeController.dispose();
     super.dispose();
   }
 
@@ -90,7 +93,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '자리를 찾으면 하트 궁합과 관계 풀이가 함께 나와요.',
+              '양력 생일로 원국을 계산해 하트 궁합과 관계 풀이를 보여드려요.',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
@@ -104,11 +107,19 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
             ),
             const SizedBox(height: AppSpacing.sm),
             AppTextField(
-              label: '생년월일',
+              label: '양력 생년월일',
               hintText: '1996-03-17',
               controller: _birthController,
               keyboardType: TextInputType.datetime,
               validator: _validateBirthDate,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            AppTextField(
+              label: '출생시간 (선택)',
+              hintText: '09:30 · 모르면 비워두세요',
+              controller: _birthTimeController,
+              keyboardType: TextInputType.datetime,
+              validator: _validateBirthTime,
             ),
             if (errorMessage != null) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -131,13 +142,18 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
 
   Future<void> _join() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final birthTime = _parseTime(_birthTimeController.text);
     final result = await ref
         .read(joinClassroomControllerProvider.notifier)
         .join(
           JoinClassroomCommand(
             shareCode: widget.shareCode,
             name: Nickname(_nameController.text),
-            birthDate: _parseDate(_birthController.text),
+            birth: BirthProfile(
+              date: _parseDate(_birthController.text),
+              hour: birthTime?.hour,
+              minute: birthTime?.minute,
+            ),
           ),
         );
     if (result == null || !mounted) return;
@@ -145,6 +161,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
     if (!result.isDuplicate) {
       _nameController.clear();
       _birthController.clear();
+      _birthTimeController.clear();
     }
     ref.read(joinClassroomControllerProvider.notifier).reset();
   }
@@ -178,6 +195,25 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
         .replaceAll(RegExp(r'[.\s/]+'), '-')
         .replaceAll(RegExp(r'-+'), '-');
     return LocalDate.parseIso(normalized);
+  }
+
+  String? _validateBirthTime(String? value) {
+    try {
+      _parseTime(value ?? '');
+      return null;
+    } on FormatException catch (error) {
+      return error.message.toString();
+    }
+  }
+
+  ({int hour, int minute})? _parseTime(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) return null;
+    final match = RegExp(r'^(\d{1,2}):([0-5]\d)$').firstMatch(normalized);
+    if (match == null) throw const FormatException('출생시간을 09:30 형식으로 입력해 주세요.');
+    final hour = int.parse(match.group(1)!);
+    if (hour > 23) throw const FormatException('시간은 00:00부터 23:59까지 입력해 주세요.');
+    return (hour: hour, minute: int.parse(match.group(2)!));
   }
 }
 

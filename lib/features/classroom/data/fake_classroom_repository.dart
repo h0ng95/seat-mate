@@ -1,9 +1,11 @@
 import '../../../core/hashing/stable_hash.dart';
 import '../../../core/values/local_date.dart';
 import '../../../core/values/nickname.dart';
+import '../domain/birth_profile.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
-import '../domain/relationship.dart';
+import '../domain/saju_chart.dart';
+import '../domain/saju_compatibility.dart';
 import '../domain/seat_mate_algorithm.dart';
 
 class FakeClassroomRepository implements ClassroomRepository {
@@ -20,18 +22,19 @@ class FakeClassroomRepository implements ClassroomRepository {
   @override
   Future<Classroom> createClassroom(CreateClassroomCommand command) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
-    final ownerResult = _algorithm.deriveOwner(command.ownerBirthDate);
+    final ownerResult = _algorithm.deriveOwner(command.ownerBirth);
     final ownerAlgorithmSeed = StableHash.hex(
-      'owner|${command.ownerBirthDate.iso}',
+      'owner|${command.ownerBirth.canonical}',
     );
     final shareCode = 'class${(++_sequence).toString().padLeft(5, '0')}';
     final characterSeed = StableHash.hex(
-      '${command.ownerName.normalized}|${command.ownerBirthDate.iso}',
+      '${command.ownerName.normalized}|${command.ownerBirth.canonical}',
     );
     final owner = ClassroomMember(
       id: 'owner-$_sequence',
       name: command.ownerName,
-      birthDate: command.ownerBirthDate,
+      birthProfile: command.ownerBirth,
+      sajuChart: ownerResult.sajuChart,
       seatIndex: ownerResult.seatIndex,
       characterSeed: characterSeed,
       focusDelta: 18,
@@ -43,7 +46,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       id: 'classroom-$_sequence',
       shareCode: shareCode,
       ownerName: command.ownerName,
-      ownerBirthDate: command.ownerBirthDate,
+      ownerBirthProfile: command.ownerBirth,
       ownerAlgorithmSeed: ownerAlgorithmSeed,
       ownerSeatIndex: ownerResult.seatIndex,
       members: [owner],
@@ -70,7 +73,7 @@ class FakeClassroomRepository implements ClassroomRepository {
 
     for (final member in classroom.members) {
       if (member.name == command.name &&
-          member.birthDate == command.birthDate) {
+          member.birthProfile?.date == command.birth.date) {
         return JoinClassroomResult(
           classroom: classroom,
           member: member,
@@ -84,8 +87,11 @@ class FakeClassroomRepository implements ClassroomRepository {
       classroomCode: classroom.shareCode,
       ownerAlgorithmSeed: classroom.ownerAlgorithmSeed,
       ownerSeatIndex: classroom.ownerSeatIndex,
+      ownerSajuChart: classroom.members
+          .firstWhere((member) => member.isOwner)
+          .sajuChart!,
       memberName: command.name,
-      memberBirthDate: command.birthDate,
+      memberBirth: command.birth,
       occupiedSeats: classroom.members
           .map((member) => member.seatIndex)
           .toSet(),
@@ -93,12 +99,14 @@ class FakeClassroomRepository implements ClassroomRepository {
     final member = ClassroomMember(
       id: 'member-${++_sequence}',
       name: command.name,
-      birthDate: command.birthDate,
+      birthProfile: command.birth,
+      sajuChart: result.sajuChart,
       seatIndex: result.seatIndex,
       characterSeed: result.characterSeed,
       focusDelta: result.focusDelta,
       joyDelta: result.joyDelta,
       relationship: result.relationship,
+      compatibility: result.compatibility,
     );
     final updated = classroom.copyWith(members: [...classroom.members, member]);
     _classrooms[command.shareCode] = updated;
@@ -106,11 +114,17 @@ class FakeClassroomRepository implements ClassroomRepository {
   }
 
   Classroom _previewClassroom({String shareCode = 'preview'}) {
-    final ownerBirth = LocalDate.parseIso('1995-06-12');
+    final ownerBirth = BirthProfile(
+      date: LocalDate.parseIso('1995-06-12'),
+      hour: 10,
+      minute: 30,
+    );
+    final ownerResult = _algorithm.deriveOwner(ownerBirth);
     final owner = ClassroomMember(
       id: 'preview-owner',
       name: Nickname('재홍'),
-      birthDate: ownerBirth,
+      birthProfile: ownerBirth,
+      sajuChart: ownerResult.sajuChart,
       seatIndex: 4,
       characterSeed: '재홍|1995-06-12',
       focusDelta: 18,
@@ -119,29 +133,44 @@ class FakeClassroomRepository implements ClassroomRepository {
       isOwner: true,
     );
     final memberData = [
-      ('지현', '1997-08-04', 0, RelationshipType.leader, 62, 41),
-      ('민수', '1996-03-17', 5, RelationshipType.buddy, -8, 92),
-      ('현우', '1995-11-23', 7, RelationshipType.accomplice, -38, 92),
+      ('지현', '1997-08-04', 0, 8, 20),
+      ('민수', '1996-03-17', 5, 14, 0),
+      ('현우', '1995-11-23', 7, null, null),
     ];
     final members = memberData.indexed.map((entry) {
       final item = entry.$2;
+      final birth = BirthProfile(
+        date: LocalDate.parseIso(item.$2),
+        hour: item.$4,
+        minute: item.$5,
+      );
+      final chart = SajuChartCalculator().calculate(birth);
+      final compatibility = const SajuCompatibilityEngine().analyze(
+        owner: ownerResult.sajuChart,
+        member: chart,
+      );
       return ClassroomMember(
         id: 'preview-${entry.$1}',
         name: Nickname(item.$1),
-        birthDate: LocalDate.parseIso(item.$2),
+        birthProfile: birth,
+        sajuChart: chart,
         seatIndex: item.$3,
         characterSeed: '${item.$1}|${item.$2}',
-        relationship: item.$4,
-        focusDelta: item.$5,
-        joyDelta: item.$6,
+        relationship: compatibility.relationshipType,
+        compatibility: compatibility,
+        focusDelta: ((compatibility.evidence.first.score - 20) * 3).clamp(
+          -40,
+          60,
+        ),
+        joyDelta: compatibility.heartScore,
       );
     });
     return Classroom(
       id: 'preview-classroom',
       shareCode: shareCode,
       ownerName: owner.name,
-      ownerBirthDate: ownerBirth,
-      ownerAlgorithmSeed: StableHash.hex('owner|${ownerBirth.iso}'),
+      ownerBirthProfile: ownerBirth,
+      ownerAlgorithmSeed: StableHash.hex('owner|${ownerBirth.canonical}'),
       ownerSeatIndex: 4,
       members: [owner, ...members],
     );

@@ -42,10 +42,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('seat-5')));
     await tester.pumpAndSettle();
 
-    expect(find.text('찰떡 짝꿍'), findsOneWidget);
     expect(find.text('하트 궁합'), findsOneWidget);
     expect(find.text('관계 사주 풀이'), findsOneWidget);
-    expect(find.text('+92%'), findsOneWidget);
   });
 
   testWidgets('shares the classroom URL from the top action', (tester) async {

@@ -12,6 +12,7 @@ import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../character/presentation/pixel_character.dart';
 import '../application/classroom_providers.dart';
+import '../domain/birth_profile.dart';
 import '../domain/classroom_repository.dart';
 import '../domain/seat_mate_algorithm.dart';
 
@@ -29,17 +30,19 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _birthController = TextEditingController();
+  final _birthTimeController = TextEditingController();
   final _algorithm = const SeatMateAlgorithmV1();
 
   _CreatePhase _phase = _CreatePhase.input;
   Nickname? _name;
-  LocalDate? _birthDate;
+  BirthProfile? _birthProfile;
   OwnerResult? _ownerResult;
 
   @override
   void dispose() {
     _nameController.dispose();
     _birthController.dispose();
+    _birthTimeController.dispose();
     super.dispose();
   }
 
@@ -99,7 +102,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '별명과 생일로 나의 자리부터 찾아볼게요.',
+                    '양력 생일로 원국을 계산해 나의 자리부터 찾아볼게요.',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
@@ -113,11 +116,19 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   AppTextField(
-                    label: '생년월일',
+                    label: '양력 생년월일',
                     hintText: '1995-06-12',
                     controller: _birthController,
                     keyboardType: TextInputType.datetime,
                     validator: _validateBirthDate,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(
+                    label: '출생시간 (선택)',
+                    hintText: '09:30 · 모르면 비워두세요',
+                    controller: _birthTimeController,
+                    keyboardType: TextInputType.datetime,
+                    validator: _validateBirthTime,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   PrimaryButton(label: '내 자리 운세 보기', onPressed: _findSeat),
@@ -137,7 +148,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
-                  '실명 대신 별명을 권장해요. 생일은 자리와 관계 결과를 만드는 데만 사용합니다.',
+                  '실명 대신 별명을 권장해요. 생일과 시간은 원국 계산에만 사용하며 교실에 공개하지 않아요.',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
@@ -228,15 +239,21 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final name = Nickname(_nameController.text);
     final birthDate = _parseDate(_birthController.text);
+    final birthTime = _parseTime(_birthTimeController.text);
+    final birthProfile = BirthProfile(
+      date: birthDate,
+      hour: birthTime?.hour,
+      minute: birthTime?.minute,
+    );
     setState(() {
       _name = name;
-      _birthDate = birthDate;
+      _birthProfile = birthProfile;
       _phase = _CreatePhase.calculating;
     });
     await Future<void>.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
     setState(() {
-      _ownerResult = _algorithm.deriveOwner(birthDate);
+      _ownerResult = _algorithm.deriveOwner(birthProfile);
       _phase = _CreatePhase.result;
     });
   }
@@ -245,10 +262,7 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     final classroom = await ref
         .read(createClassroomControllerProvider.notifier)
         .create(
-          CreateClassroomCommand(
-            ownerName: _name!,
-            ownerBirthDate: _birthDate!,
-          ),
+          CreateClassroomCommand(ownerName: _name!, ownerBirth: _birthProfile!),
         );
     if (classroom != null && mounted) {
       context.go('/class/${classroom.shareCode}');
@@ -290,6 +304,25 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
         .replaceAll(RegExp(r'[.\s/]+'), '-')
         .replaceAll(RegExp(r'-+'), '-');
     return LocalDate.parseIso(normalized);
+  }
+
+  String? _validateBirthTime(String? value) {
+    try {
+      _parseTime(value ?? '');
+      return null;
+    } on FormatException catch (error) {
+      return error.message.toString();
+    }
+  }
+
+  ({int hour, int minute})? _parseTime(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) return null;
+    final match = RegExp(r'^(\d{1,2}):([0-5]\d)$').firstMatch(normalized);
+    if (match == null) throw const FormatException('출생시간을 09:30 형식으로 입력해 주세요.');
+    final hour = int.parse(match.group(1)!);
+    if (hour > 23) throw const FormatException('시간은 00:00부터 23:59까지 입력해 주세요.');
+    return (hour: hour, minute: int.parse(match.group(2)!));
   }
 
   String _seatDescription(int seatIndex) {

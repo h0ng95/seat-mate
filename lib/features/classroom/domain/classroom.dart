@@ -1,30 +1,36 @@
-import '../../../core/values/local_date.dart';
 import '../../../core/values/nickname.dart';
+import 'birth_profile.dart';
 import 'relationship.dart';
+import 'saju_chart.dart';
+import 'saju_compatibility.dart';
 import 'seat_mate_algorithm.dart';
 
 class ClassroomMember {
   const ClassroomMember({
     required this.id,
     required this.name,
-    required this.birthDate,
+    required this.birthProfile,
+    required this.sajuChart,
     required this.seatIndex,
     required this.characterSeed,
     required this.focusDelta,
     required this.joyDelta,
     this.relationship,
+    this.compatibility,
     this.ownerProfile,
     this.isOwner = false,
   });
 
   final String id;
   final Nickname name;
-  final LocalDate? birthDate;
+  final BirthProfile? birthProfile;
+  final SajuChart? sajuChart;
   final int seatIndex;
   final String characterSeed;
   final int focusDelta;
   final int joyDelta;
   final RelationshipType? relationship;
+  final SajuCompatibility? compatibility;
   final OwnerProfileType? ownerProfile;
   final bool isOwner;
 }
@@ -34,7 +40,7 @@ class Classroom {
     required this.id,
     required this.shareCode,
     required this.ownerName,
-    required this.ownerBirthDate,
+    required this.ownerBirthProfile,
     required this.ownerAlgorithmSeed,
     required this.ownerSeatIndex,
     required this.members,
@@ -44,7 +50,7 @@ class Classroom {
   final String id;
   final String shareCode;
   final Nickname ownerName;
-  final LocalDate? ownerBirthDate;
+  final BirthProfile? ownerBirthProfile;
   final String ownerAlgorithmSeed;
   final int ownerSeatIndex;
   final List<ClassroomMember> members;
@@ -57,7 +63,7 @@ class Classroom {
       id: id,
       shareCode: shareCode,
       ownerName: ownerName,
-      ownerBirthDate: ownerBirthDate,
+      ownerBirthProfile: ownerBirthProfile,
       ownerAlgorithmSeed: ownerAlgorithmSeed,
       ownerSeatIndex: ownerSeatIndex,
       members: members ?? this.members,

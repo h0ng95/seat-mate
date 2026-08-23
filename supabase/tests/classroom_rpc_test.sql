@@ -11,11 +11,14 @@ create temporary table created_classroom as
 select * from public.create_classroom(
   '재홍',
   date '1995-06-12',
+  null::smallint,
+  null::smallint,
+  '{"engine_version":"saju-0.1.1"}'::jsonb,
   4::smallint,
   'center',
   'owner-seed',
   'owner-algorithm-seed',
-  1::smallint
+  2::smallint
 );
 
 select is(
@@ -35,12 +38,16 @@ select * from public.join_classroom(
   (select share_code from created_classroom),
   '민수',
   date '1996-03-17',
+  null::smallint,
+  null::smallint,
+  '{"engine_version":"saju-0.1.1"}'::jsonb,
+  '{"heart_score":82,"rules_version":"compatibility-1"}'::jsonb,
   'buddy',
   array[5, 3, 2, 8, 0, 6, 1, 7]::smallint[],
   'member-seed',
   (-8)::smallint,
   92::smallint,
-  1::smallint
+  2::smallint
 );
 
 select is((select result_status from first_join), 'created', 'new member is created');
@@ -51,12 +58,16 @@ select is(
       (select share_code from created_classroom),
       '민수',
       date '1996-03-17',
+      null::smallint,
+      null::smallint,
+      '{"engine_version":"saju-0.1.1"}'::jsonb,
+      '{"heart_score":82,"rules_version":"compatibility-1"}'::jsonb,
       'buddy',
       array[5, 3, 2, 8, 0, 6, 1, 7]::smallint[],
       'member-seed',
       (-8)::smallint,
       92::smallint,
-      1::smallint
+      2::smallint
     )
   ),
   'duplicate',

@@ -5,6 +5,8 @@ import '../../../core/values/nickname.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
 import '../domain/relationship.dart';
+import '../domain/saju_chart.dart';
+import '../domain/saju_compatibility.dart';
 import '../domain/seat_mate_algorithm.dart';
 
 class SupabaseClassroomRepository implements ClassroomRepository {
@@ -15,19 +17,22 @@ class SupabaseClassroomRepository implements ClassroomRepository {
 
   @override
   Future<Classroom> createClassroom(CreateClassroomCommand command) async {
-    final owner = _algorithm.deriveOwner(command.ownerBirthDate);
+    final owner = _algorithm.deriveOwner(command.ownerBirth);
     final ownerAlgorithmSeed = StableHash.hex(
-      'owner|${command.ownerBirthDate.iso}',
+      'owner|${command.ownerBirth.canonical}',
     );
     final characterSeed = StableHash.hex(
-      '${command.ownerName.normalized}|${command.ownerBirthDate.iso}',
+      '${command.ownerName.normalized}|${command.ownerBirth.canonical}',
     );
     try {
       final response = await _client.rpc(
         'create_classroom',
         params: {
           'p_owner_name': command.ownerName.display,
-          'p_owner_birth_date': command.ownerBirthDate.iso,
+          'p_owner_birth_date': command.ownerBirth.date.iso,
+          'p_owner_birth_hour': command.ownerBirth.hour,
+          'p_owner_birth_minute': command.ownerBirth.minute,
+          'p_owner_saju_chart': owner.sajuChart.toJson(),
           'p_owner_seat': owner.seatIndex,
           'p_owner_profile': owner.profile.name,
           'p_owner_character_seed': characterSeed,
@@ -71,12 +76,19 @@ class SupabaseClassroomRepository implements ClassroomRepository {
     JoinClassroomCommand command,
   ) async {
     final current = await getClassroom(command.shareCode);
+    final ownerSajuChart = current.members
+        .firstWhere((member) => member.isOwner)
+        .sajuChart;
+    if (ownerSajuChart == null) {
+      throw StateError('이 교실은 이전 계산 방식으로 만들어져 새 궁합 분석을 지원하지 않습니다.');
+    }
     final calculated = _algorithm.deriveMember(
       classroomCode: current.shareCode,
       ownerAlgorithmSeed: current.ownerAlgorithmSeed,
       ownerSeatIndex: current.ownerSeatIndex,
+      ownerSajuChart: ownerSajuChart,
       memberName: command.name,
-      memberBirthDate: command.birthDate,
+      memberBirth: command.birth,
       occupiedSeats: current.members.map((member) => member.seatIndex).toSet(),
     );
     try {
@@ -85,7 +97,11 @@ class SupabaseClassroomRepository implements ClassroomRepository {
         params: {
           'p_share_code': command.shareCode,
           'p_name': command.name.display,
-          'p_birth_date': command.birthDate.iso,
+          'p_birth_date': command.birth.date.iso,
+          'p_birth_hour': command.birth.hour,
+          'p_birth_minute': command.birth.minute,
+          'p_saju_chart': calculated.sajuChart.toJson(),
+          'p_compatibility': calculated.compatibility.toJson(),
           'p_relationship_type': calculated.relationship.code,
           'p_preferred_seats': calculated.preferredSeats,
           'p_character_seed': calculated.characterSeed,
@@ -119,7 +135,8 @@ class SupabaseClassroomRepository implements ClassroomRepository {
           return ClassroomMember(
             id: memberRow['id'] as String,
             name: Nickname(memberRow['name'] as String),
-            birthDate: null,
+            birthProfile: null,
+            sajuChart: _mapSajuChart(memberRow['saju_chart']),
             seatIndex: memberRow['seat_index'] as int,
             characterSeed: memberRow['character_seed'] as String,
             focusDelta: memberRow['fun_focus_delta'] as int,
@@ -129,6 +146,9 @@ class SupabaseClassroomRepository implements ClassroomRepository {
                 : _relationshipFromCode(
                     memberRow['relationship_type'] as String,
                   ),
+            compatibility: isOwner
+                ? null
+                : _mapCompatibility(memberRow['compatibility']),
             ownerProfile: isOwner ? ownerProfile : null,
             isOwner: isOwner,
           );
@@ -138,12 +158,22 @@ class SupabaseClassroomRepository implements ClassroomRepository {
       id: row['id'] as String,
       shareCode: row['share_code'] as String,
       ownerName: Nickname(row['owner_name'] as String),
-      ownerBirthDate: null,
+      ownerBirthProfile: null,
       ownerAlgorithmSeed: row['owner_algorithm_seed'] as String,
       ownerSeatIndex: row['owner_seat'] as int,
       members: members,
       algorithmVersion: row['algorithm_version'] as int,
     );
+  }
+
+  SajuChart? _mapSajuChart(Object? value) {
+    if (value is! Map) return null;
+    return SajuChart.fromJson(Map<String, dynamic>.from(value));
+  }
+
+  SajuCompatibility? _mapCompatibility(Object? value) {
+    if (value is! Map) return null;
+    return SajuCompatibility.fromJson(Map<String, dynamic>.from(value));
   }
 
   Object _mapException(PostgrestException error, String shareCode) {

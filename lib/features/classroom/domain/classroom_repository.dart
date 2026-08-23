@@ -1,27 +1,27 @@
-import '../../../core/values/local_date.dart';
 import '../../../core/values/nickname.dart';
+import 'birth_profile.dart';
 import 'classroom.dart';
 
 class CreateClassroomCommand {
   const CreateClassroomCommand({
     required this.ownerName,
-    required this.ownerBirthDate,
+    required this.ownerBirth,
   });
 
   final Nickname ownerName;
-  final LocalDate ownerBirthDate;
+  final BirthProfile ownerBirth;
 }
 
 class JoinClassroomCommand {
   const JoinClassroomCommand({
     required this.shareCode,
     required this.name,
-    required this.birthDate,
+    required this.birth,
   });
 
   final String shareCode;
   final Nickname name;
-  final LocalDate birthDate;
+  final BirthProfile birth;
 }
 
 class JoinClassroomResult {

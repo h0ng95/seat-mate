@@ -1,8 +1,10 @@
 import '../../../core/hashing/canonical_seed.dart';
 import '../../../core/hashing/stable_hash.dart';
-import '../../../core/values/local_date.dart';
 import '../../../core/values/nickname.dart';
+import 'birth_profile.dart';
 import 'relationship.dart';
+import 'saju_chart.dart';
+import 'saju_compatibility.dart';
 
 enum OwnerProfileType { window, center, back, front }
 
@@ -23,19 +25,25 @@ extension OwnerProfileDefinition on OwnerProfileType {
 }
 
 class OwnerResult {
-  const OwnerResult({required this.profile, required this.seatIndex});
+  const OwnerResult({
+    required this.profile,
+    required this.seatIndex,
+    required this.sajuChart,
+  });
 
   final OwnerProfileType profile;
   final int seatIndex;
+  final SajuChart sajuChart;
 
   @override
   bool operator ==(Object other) =>
       other is OwnerResult &&
       profile == other.profile &&
-      seatIndex == other.seatIndex;
+      seatIndex == other.seatIndex &&
+      sajuChart.toJson().toString() == other.sajuChart.toJson().toString();
 
   @override
-  int get hashCode => Object.hash(profile, seatIndex);
+  int get hashCode => Object.hash(profile, seatIndex, sajuChart.day.hanja);
 }
 
 class MemberResult {
@@ -46,6 +54,8 @@ class MemberResult {
     required this.characterSeed,
     required this.focusDelta,
     required this.joyDelta,
+    required this.sajuChart,
+    required this.compatibility,
   });
 
   final RelationshipType relationship;
@@ -54,6 +64,8 @@ class MemberResult {
   final String characterSeed;
   final int focusDelta;
   final int joyDelta;
+  final SajuChart sajuChart;
+  final SajuCompatibility compatibility;
 
   @override
   bool operator ==(Object other) {
@@ -63,7 +75,10 @@ class MemberResult {
         _sameList(preferredSeats, other.preferredSeats) &&
         characterSeed == other.characterSeed &&
         focusDelta == other.focusDelta &&
-        joyDelta == other.joyDelta;
+        joyDelta == other.joyDelta &&
+        sajuChart.toJson().toString() == other.sajuChart.toJson().toString() &&
+        compatibility.toJson().toString() ==
+            other.compatibility.toJson().toString();
   }
 
   static bool _sameList(List<int> first, List<int> second) {
@@ -82,27 +97,39 @@ class MemberResult {
     characterSeed,
     focusDelta,
     joyDelta,
+    sajuChart.day.hanja,
+    compatibility.heartScore,
   );
 }
 
 class SeatMateAlgorithmV1 {
   const SeatMateAlgorithmV1();
 
-  static const version = 1;
+  static const version = 2;
 
-  OwnerResult deriveOwner(LocalDate birthDate) {
-    final profileSeed = _seed('owner-profile', {'ownerBirth': birthDate.iso});
-    final profile = OwnerProfileType.values[StableHash.uint16(profileSeed) % 4];
+  OwnerResult deriveOwner(BirthProfile birth) {
+    final chart = SajuChartCalculator().calculate(birth);
+    final profile = switch (chart.dayMasterElement) {
+      'wood' => OwnerProfileType.window,
+      'fire' => OwnerProfileType.center,
+      'earth' => OwnerProfileType.center,
+      'metal' => OwnerProfileType.front,
+      _ => OwnerProfileType.back,
+    };
     final candidates = switch (profile) {
       OwnerProfileType.window => [3, 0, 6, 4],
       OwnerProfileType.center => [4, 1, 7, 3, 5],
       OwnerProfileType.back => [7, 6, 8, 4],
       OwnerProfileType.front => [1, 0, 2, 4],
     };
-    final seatSeed = _seed('owner-seat', {'ownerBirth': birthDate.iso});
+    final seatSeed = _seed('owner-seat', {
+      'ownerBirth': birth.canonical,
+      'dayPillar': chart.day.hanja,
+    });
     return OwnerResult(
       profile: profile,
       seatIndex: candidates[StableHash.uint16(seatSeed) % candidates.length],
+      sajuChart: chart,
     );
   }
 
@@ -110,8 +137,9 @@ class SeatMateAlgorithmV1 {
     required String classroomCode,
     required String ownerAlgorithmSeed,
     required int ownerSeatIndex,
+    required SajuChart ownerSajuChart,
     required Nickname memberName,
-    required LocalDate memberBirthDate,
+    required BirthProfile memberBirth,
     Set<int> occupiedSeats = const {},
   }) {
     if (ownerSeatIndex < 0 || ownerSeatIndex > 8) {
@@ -121,12 +149,14 @@ class SeatMateAlgorithmV1 {
       'classroom': classroomCode,
       'ownerSeed': ownerAlgorithmSeed,
       'memberName': memberName.normalized,
-      'memberBirth': memberBirthDate.iso,
+      'memberBirth': memberBirth.canonical,
     };
-    final relationshipSeed = _seed('relationship', fields);
-    final relationship = _relationshipFor(
-      StableHash.uint16(relationshipSeed) % 100,
+    final memberSajuChart = SajuChartCalculator().calculate(memberBirth);
+    final compatibility = const SajuCompatibilityEngine().analyze(
+      owner: ownerSajuChart,
+      member: memberSajuChart,
     );
+    final relationship = compatibility.relationshipType;
     final preferredSeats = _rankSeats(
       relationship: relationship,
       ownerSeat: ownerSeatIndex,
@@ -139,23 +169,22 @@ class SeatMateAlgorithmV1 {
     );
     if (seatIndex == null) throw StateError('교실에 빈자리가 없습니다.');
 
-    final metrics = StableHash.bytes(_seed('fun-metrics', fields));
     final characterSeed = StableHash.hex(
       _seed('character', {
         'memberName': memberName.normalized,
-        'memberBirth': memberBirthDate.iso,
+        'memberBirth': memberBirth.canonical,
       }),
     );
+    final dayMasterScore = compatibility.evidence.first.score;
     return MemberResult(
       relationship: relationship,
       seatIndex: seatIndex,
       preferredSeats: preferredSeats,
       characterSeed: characterSeed,
-      focusDelta: StableHash.mapByteToRange(
-        metrics[0],
-        relationship.focusRange,
-      ),
-      joyDelta: StableHash.mapByteToRange(metrics[1], relationship.joyRange),
+      focusDelta: ((dayMasterScore - 20) * 3).clamp(-40, 60),
+      joyDelta: compatibility.heartScore,
+      sajuChart: memberSajuChart,
+      compatibility: compatibility,
     );
   }
 
@@ -218,19 +247,6 @@ class SeatMateAlgorithmV1 {
         rowDelta < 0 && diagonal ? 100 : (rowDelta < 0 || side ? 75 : 20),
       RelationshipType.transfer => 30 + manhattan * 20,
     };
-  }
-
-  RelationshipType _relationshipFor(int bucket) {
-    if (bucket < 12) return RelationshipType.buddy;
-    if (bucket < 23) return RelationshipType.chatter;
-    if (bucket < 32) return RelationshipType.leader;
-    if (bucket < 41) return RelationshipType.rival;
-    if (bucket < 51) return RelationshipType.emergency;
-    if (bucket < 62) return RelationshipType.accomplice;
-    if (bucket < 72) return RelationshipType.quietBestie;
-    if (bucket < 82) return RelationshipType.moodMaker;
-    if (bucket < 91) return RelationshipType.caretaker;
-    return RelationshipType.transfer;
   }
 
   String _seed(String purpose, Map<String, String> fields) {
