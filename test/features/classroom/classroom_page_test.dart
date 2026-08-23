@@ -28,7 +28,14 @@ void main() {
     for (var index = 0; index < 12; index++) {
       expect(find.byKey(ValueKey('seat-$index')), findsOneWidget);
     }
-    expect(find.byKey(const ValueKey('heart-score-4')), findsOneWidget);
+    final heartBadge = find.byKey(const ValueKey('heart-score-4'));
+    expect(heartBadge, findsOneWidget);
+    final fill = tester.widget<ClipRect>(
+      find.descendant(of: heartBadge, matching: find.byType(ClipRect)),
+    );
+    final fillRect = fill.clipper!.getClip(const Size(18, 18));
+    expect(fillRect.height, closeTo(18 * 0.78, 0.001));
+    expect(fillRect.bottom, 18);
     expect(find.text('우리 반 케미 순위'), findsOneWidget);
     expect(find.byKey(const ValueKey('compatibility-rank-1')), findsOneWidget);
     expect(tester.takeException(), isNull);

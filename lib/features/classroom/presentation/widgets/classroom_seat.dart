@@ -208,33 +208,33 @@ class _CompatibilityHeartBadge extends StatelessWidget {
       label: score == null ? '케미 지수 계산 중' : '케미 지수 $score퍼센트',
       child: ExcludeSemantics(
         child: SizedBox(
-          width: 30,
+          width: 24,
           height: 34,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 27,
-                height: 23,
+                width: 18,
+                height: 18,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     const Icon(
                       Icons.favorite_rounded,
-                      size: 25,
+                      size: 18,
                       color: Color(0xFFFFD7CE),
                     ),
                     ClipRect(
                       clipper: _VerticalFillClipper(fillFraction),
                       child: const Icon(
                         Icons.favorite_rounded,
-                        size: 25,
+                        size: 18,
                         color: AppColors.coral,
                       ),
                     ),
                     const Icon(
                       Icons.favorite_border_rounded,
-                      size: 26,
+                      size: 18,
                       color: Color(0xFF74383B),
                     ),
                   ],
@@ -244,7 +244,7 @@ class _CompatibilityHeartBadge extends StatelessWidget {
                 scoreLabel,
                 style: const TextStyle(
                   color: Color(0xFF74383B),
-                  fontSize: 9,
+                  fontSize: 8,
                   height: 1,
                   fontWeight: FontWeight.w900,
                   shadows: [
