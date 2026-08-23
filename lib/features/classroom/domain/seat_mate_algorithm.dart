@@ -103,10 +103,34 @@ class MemberResult {
   );
 }
 
+class SeatAssignmentCandidate {
+  const SeatAssignmentCandidate({
+    required this.stableKey,
+    required this.relationship,
+    required this.heartScore,
+  });
+
+  final String stableKey;
+  final RelationshipType relationship;
+  final int heartScore;
+}
+
+class _SeatAssignmentPlan {
+  const _SeatAssignmentPlan({
+    required this.score,
+    required this.tieScore,
+    required this.seats,
+  });
+
+  final int score;
+  final int tieScore;
+  final List<int> seats;
+}
+
 class SeatMateAlgorithmV1 {
   const SeatMateAlgorithmV1();
 
-  static const version = 3;
+  static const version = 4;
 
   OwnerResult deriveOwner(BirthProfile birth) {
     final chart = SajuChartCalculator().calculate(birth);
@@ -190,6 +214,113 @@ class SeatMateAlgorithmV1 {
     );
   }
 
+  Map<String, int> reassignMembers({
+    required String classroomCode,
+    required String ownerAlgorithmSeed,
+    required int ownerSeatIndex,
+    required Iterable<SeatAssignmentCandidate> members,
+  }) {
+    if (!ClassroomSeatLayout.isValid(ownerSeatIndex)) {
+      throw ArgumentError.value(ownerSeatIndex, 'ownerSeatIndex');
+    }
+    final orderedMembers = members.toList(growable: false);
+    if (orderedMembers.length >= ClassroomSeatLayout.capacity) {
+      throw ArgumentError.value(
+        orderedMembers.length,
+        'members',
+        '방장을 제외한 참여자는 11명 이하여야 합니다.',
+      );
+    }
+    if (orderedMembers.map((member) => member.stableKey).toSet().length !=
+        orderedMembers.length) {
+      throw ArgumentError.value(members, 'members', 'stableKey가 중복되었습니다.');
+    }
+    orderedMembers.sort((first, second) {
+      final scoreComparison = second.heartScore.compareTo(first.heartScore);
+      if (scoreComparison != 0) return scoreComparison;
+      final firstOrder = StableHash.uint32(
+        _seed('member-order', {
+          'classroom': classroomCode,
+          'ownerSeed': ownerAlgorithmSeed,
+          'member': first.stableKey,
+        }),
+      );
+      final secondOrder = StableHash.uint32(
+        _seed('member-order', {
+          'classroom': classroomCode,
+          'ownerSeed': ownerAlgorithmSeed,
+          'member': second.stableKey,
+        }),
+      );
+      final orderComparison = firstOrder.compareTo(secondOrder);
+      return orderComparison != 0
+          ? orderComparison
+          : first.stableKey.compareTo(second.stableKey);
+    });
+
+    final availableSeats = [
+      for (var seat = 0; seat < ClassroomSeatLayout.capacity; seat++)
+        if (seat != ownerSeatIndex) seat,
+    ];
+    final memo = <int, _SeatAssignmentPlan>{};
+
+    _SeatAssignmentPlan solve(int memberIndex, int occupiedMask) {
+      if (memberIndex == orderedMembers.length) {
+        return const _SeatAssignmentPlan(score: 0, tieScore: 0, seats: []);
+      }
+      final memoKey = (memberIndex << availableSeats.length) | occupiedMask;
+      final cached = memo[memoKey];
+      if (cached != null) return cached;
+
+      final member = orderedMembers[memberIndex];
+      _SeatAssignmentPlan? best;
+      for (
+        var seatOffset = 0;
+        seatOffset < availableSeats.length;
+        seatOffset++
+      ) {
+        final bit = 1 << seatOffset;
+        if (occupiedMask & bit != 0) continue;
+        final seat = availableSeats[seatOffset];
+        final tail = solve(memberIndex + 1, occupiedMask | bit);
+        final candidate = _SeatAssignmentPlan(
+          score:
+              _seatScore(
+                member.relationship,
+                ownerSeatIndex,
+                seat,
+                member.heartScore,
+              ) +
+              tail.score,
+          tieScore:
+              StableHash.uint16(
+                _seed('class-seat-tie', {
+                  'classroom': classroomCode,
+                  'ownerSeed': ownerAlgorithmSeed,
+                  'member': member.stableKey,
+                  'seat': '$seat',
+                }),
+              ) +
+              tail.tieScore,
+          seats: [seat, ...tail.seats],
+        );
+        if (best == null ||
+            candidate.score > best.score ||
+            (candidate.score == best.score &&
+                candidate.tieScore > best.tieScore)) {
+          best = candidate;
+        }
+      }
+      return memo[memoKey] = best!;
+    }
+
+    final plan = solve(0, 0);
+    return Map.unmodifiable({
+      for (var index = 0; index < orderedMembers.length; index++)
+        orderedMembers[index].stableKey: plan.seats[index],
+    });
+  }
+
   List<int> _rankSeats({
     required RelationshipType relationship,
     required int ownerSeat,
@@ -245,14 +376,7 @@ class SeatMateAlgorithmV1 {
     final sameColumn = division == ownerDivision && side == ownerSide;
     final sameRowOtherDivision = rowDelta == 0 && divisionDistance == 1;
     final diagonal = rowDistance == 1 && columnDistance <= 2;
-    final partnerBonus = sameDesk
-        ? switch (heartScore) {
-            >= 75 => 220,
-            >= 68 => 100,
-            >= 60 => 20,
-            _ => -80,
-          }
-        : 0;
+    final partnerBonus = sameDesk ? heartScore * 1000 : 0;
 
     final relationshipScore = switch (type) {
       RelationshipType.buddy =>

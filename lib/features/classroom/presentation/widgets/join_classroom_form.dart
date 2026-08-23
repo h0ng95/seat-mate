@@ -130,7 +130,7 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
             ],
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
-              label: isLoading ? '우리 사이를 읽는 중...' : '내 자리와 케미 보기',
+              label: isLoading ? '우리 사이와 자리를 읽는 중...' : '내 자리와 케미 보기',
               isLoading: isLoading,
               onPressed: isLoading ? null : _join,
             ),

@@ -197,7 +197,9 @@ share_code
 name
 birth_date
 relationship_type
-preferred_seats smallint[]
+existing_member_ids uuid[]
+existing_member_seats smallint[]
+new_seat smallint
 character_seed
 fun_focus_delta
 fun_joy_delta
@@ -210,14 +212,14 @@ algorithm_version
 2. 없으면 `CLASSROOM_NOT_FOUND`를 반환한다.
 3. 정규화 이름과 날짜 fingerprint로 기존 참여를 찾는다.
 4. 중복이면 `DUPLICATE_MEMBER`와 기존 member id를 반환한다.
-5. `member_count >= 9`이면 `CLASSROOM_FULL`을 반환한다.
-6. 사용 중인 좌석을 조회한다.
-7. `preferred_seats` 중 비어 있는 첫 좌석을 선택한다.
-8. 후보가 모두 찼으면 결정론적 fallback 목록에서 첫 빈 좌석을 선택한다.
-9. 구성원을 삽입하고 `member_count`를 1 증가시킨다.
+5. `member_count >= 12`이면 `CLASSROOM_FULL`을 반환한다.
+6. 전달받은 기존 member id가 현재 비방장 명단과 정확히 일치하는지 검증한다.
+7. 방장 좌석을 제외한 전체 배치에 중복이나 범위 오류가 없는지 검증한다.
+8. 기존 구성원 좌석을 한 번에 갱신하고 새 구성원을 최종 좌석에 삽입한다.
+9. `member_count`를 1 증가시키고 `algorithm_version`을 갱신한다.
 10. 새 구성원과 갱신된 인원수를 반환한다.
 
-교실 행 잠금으로 동시에 두 명이 참여해도 같은 마지막 좌석을 배정받지 않는다.
+교실 행 잠금으로 동시에 두 명이 참여해도 같은 마지막 좌석을 배정받지 않는다. 클라이언트가 읽은 뒤 다른 참여자가 먼저 저장되었다면 `CLASSROOM_CHANGED`를 반환해 최신 명단 기준 재계산을 유도한다.
 
 ## RLS 정책
 

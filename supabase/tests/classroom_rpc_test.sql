@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(10);
 
 select has_table('public', 'classrooms', 'classrooms table exists');
 select has_table('public', 'classroom_members', 'classroom_members table exists');
@@ -43,7 +43,9 @@ select * from public.join_classroom(
   '{"engine_version":"saju-0.1.1"}'::jsonb,
   '{"heart_score":82,"rules_version":"compatibility-1"}'::jsonb,
   'buddy',
-  array[5, 3, 2, 8, 0, 6, 1, 7]::smallint[],
+  array[]::uuid[],
+  array[]::smallint[],
+  5::smallint,
   'member-seed',
   (-8)::smallint,
   92::smallint,
@@ -63,7 +65,9 @@ select is(
       '{"engine_version":"saju-0.1.1"}'::jsonb,
       '{"heart_score":82,"rules_version":"compatibility-1"}'::jsonb,
       'buddy',
-      array[5, 3, 2, 8, 0, 6, 1, 7]::smallint[],
+      array[]::uuid[],
+      array[]::smallint[],
+      5::smallint,
       'member-seed',
       (-8)::smallint,
       92::smallint,
@@ -72,6 +76,41 @@ select is(
   ),
   'duplicate',
   'duplicate member returns the existing seat'
+);
+
+create temporary table second_join as
+select * from public.join_classroom(
+  (select share_code from created_classroom),
+  '소라',
+  date '1998-02-21',
+  null::smallint,
+  null::smallint,
+  '{"engine_version":"saju-0.1.1"}'::jsonb,
+  '{"heart_score":94,"rules_version":"compatibility-1"}'::jsonb,
+  'caretaker',
+  array[(select member_id from first_join)]::uuid[],
+  array[6]::smallint[],
+  5::smallint,
+  'second-member-seed',
+  10::smallint,
+  94::smallint,
+  4::smallint
+);
+
+select is(
+  (
+    select seat_index
+    from public.classroom_members
+    where id = (select member_id from first_join)
+  ),
+  6::smallint,
+  'existing member is reseated when a new member joins'
+);
+
+select is(
+  (select seat_index from second_join),
+  5::smallint,
+  'new member receives the recalculated seat'
 );
 
 select * from finish();

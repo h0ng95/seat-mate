@@ -34,6 +34,23 @@ class ClassroomMember {
   final SajuCompatibility? compatibility;
   final OwnerProfileType? ownerProfile;
   final bool isOwner;
+
+  ClassroomMember copyWith({int? seatIndex}) {
+    return ClassroomMember(
+      id: id,
+      name: name,
+      birthProfile: birthProfile,
+      sajuChart: sajuChart,
+      seatIndex: seatIndex ?? this.seatIndex,
+      characterSeed: characterSeed,
+      focusDelta: focusDelta,
+      joyDelta: joyDelta,
+      relationship: relationship,
+      compatibility: compatibility,
+      ownerProfile: ownerProfile,
+      isOwner: isOwner,
+    );
+  }
 }
 
 class Classroom {

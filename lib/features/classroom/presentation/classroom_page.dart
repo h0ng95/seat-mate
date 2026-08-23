@@ -108,9 +108,14 @@ class _ClassroomContentState extends State<_ClassroomContent> {
 
   @override
   Widget build(BuildContext context) {
+    final enteringCharacterSeed = _enteringMember?.characterSeed;
     final sceneMembers = _classroom.members
+        .where((member) => member.characterSeed != enteringCharacterSeed)
         .map((member) => _toSceneMember(_classroom, member))
         .toList();
+    final sceneKey = _classroom.members
+        .map((member) => '${member.characterSeed}:${member.seatIndex}')
+        .join('|');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -150,7 +155,7 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                                       ? (_classroom.isFull
                                             ? '열두 인연이 모두 모였어요!'
                                             : '친구가 들어올 때마다 우리 사이 풀이가 열려요.')
-                                      : '새로운 인연이 자리를 찾았어요!',
+                                      : '새 인연과 함께 자리를 다시 정했어요!',
                                   key: ValueKey(
                                     _enteringMember?.name ??
                                         _classroom.members.length,
@@ -186,15 +191,21 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                ClassroomScene(
-                  members: sceneMembers,
-                  enteringMember: _enteringMember,
-                  onEntryComplete: _completeEntry,
-                  onMemberTap: (member) => showMemberResultSheet(
-                    context,
-                    member,
-                    shareCode: _classroom.shareCode,
-                    ownerName: _classroom.ownerName.display,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: ClassroomScene(
+                    key: ValueKey(sceneKey),
+                    members: sceneMembers,
+                    enteringMember: _enteringMember,
+                    onEntryComplete: _completeEntry,
+                    onMemberTap: (member) => showMemberResultSheet(
+                      context,
+                      member,
+                      shareCode: _classroom.shareCode,
+                      ownerName: _classroom.ownerName.display,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -272,6 +283,7 @@ class _ClassroomContentState extends State<_ClassroomContent> {
       return;
     }
     setState(() {
+      _classroom = result.classroom;
       _pendingResult = result;
       _enteringMember = sceneMember;
     });

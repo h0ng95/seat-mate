@@ -75,53 +75,103 @@ class SupabaseClassroomRepository implements ClassroomRepository {
   Future<JoinClassroomResult> joinClassroom(
     JoinClassroomCommand command,
   ) async {
-    final current = await getClassroom(command.shareCode);
-    final ownerSajuChart = current.members
-        .firstWhere((member) => member.isOwner)
-        .sajuChart;
-    if (ownerSajuChart == null) {
-      throw StateError('이 교실은 이전 계산 방식으로 만들어져 새 케미 분석을 지원하지 않습니다.');
-    }
-    final calculated = _algorithm.deriveMember(
-      classroomCode: current.shareCode,
-      ownerAlgorithmSeed: current.ownerAlgorithmSeed,
-      ownerSeatIndex: current.ownerSeatIndex,
-      ownerSajuChart: ownerSajuChart,
-      memberName: command.name,
-      memberBirth: command.birth,
-      occupiedSeats: current.members.map((member) => member.seatIndex).toSet(),
-    );
-    try {
-      final response = await _client.rpc(
-        'join_classroom',
-        params: {
-          'p_share_code': command.shareCode,
-          'p_name': command.name.display,
-          'p_birth_date': command.birth.date.iso,
-          'p_birth_hour': command.birth.hour,
-          'p_birth_minute': command.birth.minute,
-          'p_saju_chart': calculated.sajuChart.toJson(),
-          'p_compatibility': calculated.compatibility.toJson(),
-          'p_relationship_type': calculated.relationship.code,
-          'p_preferred_seats': calculated.preferredSeats,
-          'p_character_seed': calculated.characterSeed,
-          'p_fun_focus_delta': calculated.focusDelta,
-          'p_fun_joy_delta': calculated.joyDelta,
-          'p_algorithm_version': SeatMateAlgorithmV1.version,
-        },
+    for (var attempt = 0; attempt < 3; attempt++) {
+      final current = await getClassroom(command.shareCode);
+      final ownerSajuChart = current.members
+          .firstWhere((member) => member.isOwner)
+          .sajuChart;
+      if (ownerSajuChart == null) {
+        throw StateError('이 교실은 이전 계산 방식으로 만들어져 새 케미 분석을 지원하지 않습니다.');
+      }
+      final calculated = _algorithm.deriveMember(
+        classroomCode: current.shareCode,
+        ownerAlgorithmSeed: current.ownerAlgorithmSeed,
+        ownerSeatIndex: current.ownerSeatIndex,
+        ownerSajuChart: ownerSajuChart,
+        memberName: command.name,
+        memberBirth: command.birth,
       );
-      final row = (response as List).cast<Map<String, dynamic>>().first;
-      final updated = await getClassroom(command.shareCode);
-      final memberId = row['member_id'] as String;
-      final member = updated.members.firstWhere((item) => item.id == memberId);
-      return JoinClassroomResult(
-        classroom: updated,
-        member: member,
-        isDuplicate: row['result_status'] == 'duplicate',
+      final existingMembers = current.members
+          .where((member) => !member.isOwner)
+          .toList(growable: false);
+      for (final member in current.members) {
+        if (member.characterSeed == calculated.characterSeed) {
+          return JoinClassroomResult(
+            classroom: current,
+            member: member,
+            isDuplicate: true,
+          );
+        }
+      }
+      final assignments = _algorithm.reassignMembers(
+        classroomCode: current.shareCode,
+        ownerAlgorithmSeed: current.ownerAlgorithmSeed,
+        ownerSeatIndex: current.ownerSeatIndex,
+        members: [
+          ...existingMembers.map((member) {
+            final relationship = member.relationship;
+            final compatibility = member.compatibility;
+            if (relationship == null || compatibility == null) {
+              throw StateError('이 교실은 이전 계산 방식으로 만들어져 전체 자리 재배치를 지원하지 않습니다.');
+            }
+            return SeatAssignmentCandidate(
+              stableKey: member.characterSeed,
+              relationship: relationship,
+              heartScore: compatibility.heartScore,
+            );
+          }),
+          SeatAssignmentCandidate(
+            stableKey: calculated.characterSeed,
+            relationship: calculated.relationship,
+            heartScore: calculated.compatibility.heartScore,
+          ),
+        ],
       );
-    } on PostgrestException catch (error) {
-      throw _mapException(error, command.shareCode);
+
+      try {
+        final response = await _client.rpc(
+          'join_classroom',
+          params: {
+            'p_share_code': command.shareCode,
+            'p_name': command.name.display,
+            'p_birth_date': command.birth.date.iso,
+            'p_birth_hour': command.birth.hour,
+            'p_birth_minute': command.birth.minute,
+            'p_saju_chart': calculated.sajuChart.toJson(),
+            'p_compatibility': calculated.compatibility.toJson(),
+            'p_relationship_type': calculated.relationship.code,
+            'p_existing_member_ids': existingMembers
+                .map((member) => member.id)
+                .toList(growable: false),
+            'p_existing_member_seats': existingMembers
+                .map((member) => assignments[member.characterSeed])
+                .toList(growable: false),
+            'p_new_seat': assignments[calculated.characterSeed],
+            'p_character_seed': calculated.characterSeed,
+            'p_fun_focus_delta': calculated.focusDelta,
+            'p_fun_joy_delta': calculated.joyDelta,
+            'p_algorithm_version': SeatMateAlgorithmV1.version,
+          },
+        );
+        final row = (response as List).cast<Map<String, dynamic>>().first;
+        final updated = await getClassroom(command.shareCode);
+        final memberId = row['member_id'] as String;
+        final member = updated.members.firstWhere(
+          (item) => item.id == memberId,
+        );
+        return JoinClassroomResult(
+          classroom: updated,
+          member: member,
+          isDuplicate: row['result_status'] == 'duplicate',
+        );
+      } on PostgrestException catch (error) {
+        if (error.message.contains('CLASSROOM_CHANGED') && attempt < 2) {
+          continue;
+        }
+        throw _mapException(error, command.shareCode);
+      }
     }
+    throw StateError('최신 교실 자리 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
   }
 
   Classroom _mapClassroom(

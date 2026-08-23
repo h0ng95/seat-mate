@@ -92,12 +92,10 @@ class FakeClassroomRepository implements ClassroomRepository {
           .sajuChart!,
       memberName: command.name,
       memberBirth: command.birth,
-      occupiedSeats: classroom.members
-          .map((member) => member.seatIndex)
-          .toSet(),
     );
-    final member = ClassroomMember(
-      id: 'member-${++_sequence}',
+    final memberId = 'member-${++_sequence}';
+    final newMember = ClassroomMember(
+      id: memberId,
       name: command.name,
       birthProfile: command.birth,
       sajuChart: result.sajuChart,
@@ -108,9 +106,41 @@ class FakeClassroomRepository implements ClassroomRepository {
       relationship: result.relationship,
       compatibility: result.compatibility,
     );
-    final updated = classroom.copyWith(members: [...classroom.members, member]);
+    final reseatedMembers = _reassignMembers(classroom, [
+      ...classroom.members,
+      newMember,
+    ]);
+    final updated = classroom.copyWith(members: reseatedMembers);
     _classrooms[command.shareCode] = updated;
-    return JoinClassroomResult(classroom: updated, member: member);
+    return JoinClassroomResult(
+      classroom: updated,
+      member: reseatedMembers.firstWhere((member) => member.id == memberId),
+    );
+  }
+
+  List<ClassroomMember> _reassignMembers(
+    Classroom classroom,
+    List<ClassroomMember> members,
+  ) {
+    final assignments = _algorithm.reassignMembers(
+      classroomCode: classroom.shareCode,
+      ownerAlgorithmSeed: classroom.ownerAlgorithmSeed,
+      ownerSeatIndex: classroom.ownerSeatIndex,
+      members: members.where((member) => !member.isOwner).map((member) {
+        return SeatAssignmentCandidate(
+          stableKey: member.characterSeed,
+          relationship: member.relationship!,
+          heartScore: member.compatibility!.heartScore,
+        );
+      }),
+    );
+    return members
+        .map(
+          (member) => member.isOwner
+              ? member
+              : member.copyWith(seatIndex: assignments[member.characterSeed]),
+        )
+        .toList(growable: false);
   }
 
   Classroom _previewClassroom({String shareCode = 'preview'}) {
