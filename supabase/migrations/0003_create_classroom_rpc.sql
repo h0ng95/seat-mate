@@ -27,6 +27,7 @@ create or replace function public.create_classroom(
   p_owner_seat smallint,
   p_owner_profile text,
   p_owner_character_seed text,
+  p_owner_algorithm_seed text,
   p_algorithm_version smallint default 1
 )
 returns table (classroom_id uuid, share_code text, owner_member_id uuid)
@@ -66,6 +67,7 @@ begin
         owner_seat,
         owner_profile,
         owner_character_seed,
+        owner_algorithm_seed,
         algorithm_version
       ) values (
         v_share_code,
@@ -75,6 +77,7 @@ begin
         p_owner_seat,
         p_owner_profile,
         p_owner_character_seed,
+        p_owner_algorithm_seed,
         p_algorithm_version
       ) returning id into v_classroom_id;
       exit;

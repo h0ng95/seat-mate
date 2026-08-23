@@ -108,7 +108,7 @@ class SeatMateAlgorithmV1 {
 
   MemberResult deriveMember({
     required String classroomCode,
-    required LocalDate ownerBirthDate,
+    required String ownerAlgorithmSeed,
     required int ownerSeatIndex,
     required Nickname memberName,
     required LocalDate memberBirthDate,
@@ -119,7 +119,7 @@ class SeatMateAlgorithmV1 {
     }
     final fields = {
       'classroom': classroomCode,
-      'ownerBirth': ownerBirthDate.iso,
+      'ownerSeed': ownerAlgorithmSeed,
       'memberName': memberName.normalized,
       'memberBirth': memberBirthDate.iso,
     };

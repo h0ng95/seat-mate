@@ -20,6 +20,7 @@ create table public.classrooms (
   owner_name text not null,
   owner_name_normalized text not null,
   owner_birth_date date not null,
+  owner_algorithm_seed text not null,
   owner_seat smallint not null,
   owner_profile text not null,
   owner_character_seed text not null,

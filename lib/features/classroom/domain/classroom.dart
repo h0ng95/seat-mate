@@ -19,7 +19,7 @@ class ClassroomMember {
 
   final String id;
   final Nickname name;
-  final LocalDate birthDate;
+  final LocalDate? birthDate;
   final int seatIndex;
   final String characterSeed;
   final int focusDelta;
@@ -35,6 +35,7 @@ class Classroom {
     required this.shareCode,
     required this.ownerName,
     required this.ownerBirthDate,
+    required this.ownerAlgorithmSeed,
     required this.ownerSeatIndex,
     required this.members,
     this.algorithmVersion = SeatMateAlgorithmV1.version,
@@ -43,7 +44,8 @@ class Classroom {
   final String id;
   final String shareCode;
   final Nickname ownerName;
-  final LocalDate ownerBirthDate;
+  final LocalDate? ownerBirthDate;
+  final String ownerAlgorithmSeed;
   final int ownerSeatIndex;
   final List<ClassroomMember> members;
   final int algorithmVersion;
@@ -56,6 +58,7 @@ class Classroom {
       shareCode: shareCode,
       ownerName: ownerName,
       ownerBirthDate: ownerBirthDate,
+      ownerAlgorithmSeed: ownerAlgorithmSeed,
       ownerSeatIndex: ownerSeatIndex,
       members: members ?? this.members,
       algorithmVersion: algorithmVersion,

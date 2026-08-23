@@ -1,10 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../app/app_config.dart';
 import '../data/fake_classroom_repository.dart';
+import '../data/supabase_classroom_repository.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
 
+final appConfigProvider = Provider<AppConfig>(
+  (ref) => AppConfig.fromEnvironment(),
+);
+
 final classroomRepositoryProvider = Provider<ClassroomRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (config.hasSupabase) {
+    return SupabaseClassroomRepository(Supabase.instance.client);
+  }
   return FakeClassroomRepository();
 });
 

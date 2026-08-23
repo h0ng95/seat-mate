@@ -19,7 +19,7 @@ void main() {
   test('returns the same member result for the same input', () {
     final first = algorithm.deriveMember(
       classroomCode: '8fj2kd9abc',
-      ownerBirthDate: ownerBirth,
+      ownerAlgorithmSeed: 'owner-seed',
       ownerSeatIndex: 4,
       memberName: memberName,
       memberBirthDate: memberBirth,
@@ -27,7 +27,7 @@ void main() {
     );
     final second = algorithm.deriveMember(
       classroomCode: '8fj2kd9abc',
-      ownerBirthDate: ownerBirth,
+      ownerAlgorithmSeed: 'owner-seed',
       ownerSeatIndex: 4,
       memberName: memberName,
       memberBirthDate: memberBirth,
@@ -40,7 +40,7 @@ void main() {
   test('never assigns an occupied seat', () {
     final result = algorithm.deriveMember(
       classroomCode: '8fj2kd9abc',
-      ownerBirthDate: ownerBirth,
+      ownerAlgorithmSeed: 'owner-seed',
       ownerSeatIndex: 4,
       memberName: memberName,
       memberBirthDate: memberBirth,
@@ -54,7 +54,7 @@ void main() {
     expect(
       () => algorithm.deriveMember(
         classroomCode: '8fj2kd9abc',
-        ownerBirthDate: ownerBirth,
+        ownerAlgorithmSeed: 'owner-seed',
         ownerSeatIndex: 4,
         memberName: memberName,
         memberBirthDate: memberBirth,

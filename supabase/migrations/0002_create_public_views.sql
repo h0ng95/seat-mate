@@ -5,6 +5,7 @@ select
   share_code,
   owner_name,
   owner_seat,
+  owner_algorithm_seed,
   owner_profile,
   owner_character_seed,
   algorithm_version,

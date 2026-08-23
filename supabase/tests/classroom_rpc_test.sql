@@ -14,6 +14,7 @@ select * from public.create_classroom(
   4::smallint,
   'center',
   'owner-seed',
+  'owner-algorithm-seed',
   1::smallint
 );
 

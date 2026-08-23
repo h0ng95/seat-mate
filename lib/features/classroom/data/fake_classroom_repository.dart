@@ -19,6 +19,9 @@ class FakeClassroomRepository implements ClassroomRepository {
   Future<Classroom> createClassroom(CreateClassroomCommand command) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
     final ownerResult = _algorithm.deriveOwner(command.ownerBirthDate);
+    final ownerAlgorithmSeed = StableHash.hex(
+      'owner|${command.ownerBirthDate.iso}',
+    );
     final shareCode = 'class${(++_sequence).toString().padLeft(5, '0')}';
     final characterSeed = StableHash.hex(
       '${command.ownerName.normalized}|${command.ownerBirthDate.iso}',
@@ -39,6 +42,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       shareCode: shareCode,
       ownerName: command.ownerName,
       ownerBirthDate: command.ownerBirthDate,
+      ownerAlgorithmSeed: ownerAlgorithmSeed,
       ownerSeatIndex: ownerResult.seatIndex,
       members: [owner],
     );
@@ -76,7 +80,7 @@ class FakeClassroomRepository implements ClassroomRepository {
 
     final result = _algorithm.deriveMember(
       classroomCode: classroom.shareCode,
-      ownerBirthDate: classroom.ownerBirthDate,
+      ownerAlgorithmSeed: classroom.ownerAlgorithmSeed,
       ownerSeatIndex: classroom.ownerSeatIndex,
       memberName: command.name,
       memberBirthDate: command.birthDate,
@@ -135,6 +139,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       shareCode: 'preview',
       ownerName: owner.name,
       ownerBirthDate: ownerBirth,
+      ownerAlgorithmSeed: StableHash.hex('owner|${ownerBirth.iso}'),
       ownerSeatIndex: 4,
       members: [owner, ...members],
     );
