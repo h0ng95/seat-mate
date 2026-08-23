@@ -166,7 +166,6 @@ class SajuCompatibilityEngine {
         memberDayBranch,
         saju.branchClashes,
       ),
-      positiveRelations: chartFlow.positive,
       tensionRelations: chartFlow.tension,
     );
 
@@ -359,7 +358,6 @@ class SajuCompatibilityEngine {
     required saju.Element memberElement,
     required bool dayBranchesCombine,
     required bool dayBranchesClash,
-    required int positiveRelations,
     required int tensionRelations,
   }) {
     if (dayBranchesCombine) return RelationshipType.buddy;
@@ -371,7 +369,6 @@ class SajuCompatibilityEngine {
       return RelationshipType.leader;
     }
     if (score >= 88) return RelationshipType.quietBestie;
-    if (positiveRelations >= 4) return RelationshipType.emergency;
     if (ownerElement == memberElement) return RelationshipType.accomplice;
     if (tensionRelations >= 4) return RelationshipType.transfer;
     if (score >= 72) return RelationshipType.moodMaker;

@@ -267,8 +267,6 @@ class SeatMateAlgorithmV1 {
         sameRowOtherDivision
             ? 105
             : (sameColumn ? 75 + rowDistance * 10 : 35 + manhattan * 4),
-      RelationshipType.emergency =>
-        diagonal ? 105 : (sameDesk || manhattan <= 2 ? 75 : 25),
       RelationshipType.accomplice =>
         sameDesk
             ? 115
