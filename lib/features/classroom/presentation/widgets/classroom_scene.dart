@@ -159,7 +159,8 @@ class _ClassroomSceneState extends State<ClassroomScene> {
                   right: constraints.maxWidth * 0.24,
                   bottom: constraints.maxHeight * 0.025,
                   height: constraints.maxHeight * 0.1,
-                  child: Center(
+                  child: Align(
+                    alignment: const Alignment(0, -0.3),
                     child: Text(
                       '우리 반에 앉아봐',
                       maxLines: 1,
@@ -172,6 +173,29 @@ class _ClassroomSceneState extends State<ClassroomScene> {
                             offset: Offset(1, 2),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: constraints.maxWidth * 0.255,
+                  bottom: constraints.maxHeight * 0.032,
+                  width: constraints.maxWidth * 0.14,
+                  height: constraints.maxHeight * 0.075,
+                  child: Transform.rotate(
+                    angle: -0.035,
+                    child: const Align(
+                      alignment: Alignment.topRight,
+                      child: Text(
+                        '떠든 사람 누구?',
+                        maxLines: 1,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: Color(0xC7FEFCF6),
+                          fontSize: 8,
+                          height: 1,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),

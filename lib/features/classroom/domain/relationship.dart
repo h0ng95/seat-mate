@@ -26,16 +26,16 @@ extension RelationshipTypeDefinition on RelationshipType {
   };
 
   String get title => switch (this) {
-    RelationshipType.buddy => '찰떡 짝꿍',
-    RelationshipType.chatter => '수업 방해 공범',
-    RelationshipType.leader => '정신적 반장',
-    RelationshipType.rival => '은근한 라이벌',
-    RelationshipType.emergency => '비상연락망 1순위',
-    RelationshipType.accomplice => '공동피고인',
-    RelationshipType.quietBestie => '조용한 찐친',
-    RelationshipType.moodMaker => '분위기 메이커',
-    RelationshipType.caretaker => '챙김 담당',
-    RelationshipType.transfer => '예측불가 전학생',
+    RelationshipType.buddy => '찐 쏘메',
+    RelationshipType.chatter => '수다 메이트',
+    RelationshipType.leader => '든든한 내 편',
+    RelationshipType.rival => '성장 라이벌',
+    RelationshipType.emergency => 'SOS 메이트',
+    RelationshipType.accomplice => '텐션 메이트',
+    RelationshipType.quietBestie => '잔잔한 찐친',
+    RelationshipType.moodMaker => '기분 부스터',
+    RelationshipType.caretaker => '케어 메이트',
+    RelationshipType.transfer => '반전 케미',
   };
 
   String get description => switch (this) {

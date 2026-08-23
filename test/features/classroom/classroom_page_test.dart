@@ -38,6 +38,7 @@ void main() {
     expect(fillRect.bottom, 18);
     expect(find.text('우리 반 케미 순위'), findsOneWidget);
     expect(find.byKey(const ValueKey('compatibility-rank-1')), findsOneWidget);
+    expect(find.text('떠든 사람 누구?'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
