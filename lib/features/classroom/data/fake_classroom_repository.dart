@@ -19,9 +19,13 @@ class FakeClassroomRepository implements ClassroomRepository {
   final _algorithm = const SeatMateAlgorithmV1();
   final Map<String, Classroom> _classrooms = {};
   int _sequence = 0;
+  String? _createdClassroomShareCode;
 
   @override
   Future<Classroom> createClassroom(CreateClassroomCommand command) async {
+    if (_createdClassroomShareCode case final shareCode?) {
+      throw ClassroomAlreadyExistsException(shareCode);
+    }
     await Future<void>.delayed(const Duration(milliseconds: 250));
     final ownerResult = _algorithm.deriveOwner(command.ownerBirth);
     final ownerAlgorithmSeed = StableHash.hex(
@@ -56,6 +60,7 @@ class FakeClassroomRepository implements ClassroomRepository {
       members: [owner],
     );
     _classrooms[shareCode] = classroom;
+    _createdClassroomShareCode = shareCode;
     return classroom;
   }
 
@@ -86,6 +91,9 @@ class FakeClassroomRepository implements ClassroomRepository {
   @override
   Future<void> deleteMyClassroom(String shareCode) async {
     _classrooms.remove(shareCode);
+    if (_createdClassroomShareCode == shareCode) {
+      _createdClassroomShareCode = null;
+    }
   }
 
   @override

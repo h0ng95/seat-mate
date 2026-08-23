@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/app_colors.dart';
 import '../../../app/app_constants.dart';
-import '../../../app/app_navigation.dart';
 import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/primary_button.dart';
@@ -22,6 +21,11 @@ class LandingPage extends ConsumerWidget {
     final config = ref.watch(appConfigProvider);
     final authState = ref.watch(authUserProvider);
     final user = authState.value;
+    final classroomsState = config.hasSupabase && user != null
+        ? ref.watch(savedClassroomsProvider(user.id))
+        : null;
+    final classrooms = classroomsState?.value ?? const [];
+    final existingClassroom = classrooms.isEmpty ? null : classrooms.first;
     return AppScaffold(
       showBrand: false,
       padding: EdgeInsets.zero,
@@ -55,20 +59,33 @@ class LandingPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 if (config.hasSupabase && user == null)
                   const KakaoLoginButton()
+                else if (existingClassroom != null)
+                  PrimaryButton(
+                    label: '내 반 들어가기',
+                    icon: Icons.school_rounded,
+                    onPressed: () =>
+                        context.go('/class/${existingClassroom.shareCode}'),
+                  )
+                else if (classroomsState?.isLoading == true)
+                  const PrimaryButton(
+                    label: '내 반 확인 중...',
+                    icon: Icons.hourglass_top_rounded,
+                    isLoading: true,
+                    onPressed: null,
+                  )
+                else if (classroomsState?.hasError == true)
+                  PrimaryButton(
+                    label: '내 반 다시 확인하기',
+                    icon: Icons.refresh_rounded,
+                    onPressed: () =>
+                        ref.invalidate(savedClassroomsProvider(user!.id)),
+                  )
                 else
                   PrimaryButton(
                     label: '내 반 만들기',
                     icon: Icons.auto_awesome_rounded,
                     onPressed: () => context.go('/create'),
                   ),
-                if (config.hasSupabase && user != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton.icon(
-                    onPressed: () async => openMyClassrooms(context, ref),
-                    icon: const Icon(Icons.school_outlined),
-                    label: const Text('내 반 보기'),
-                  ),
-                ],
                 const SizedBox(height: AppSpacing.sm),
                 OutlinedButton.icon(
                   onPressed: () => context.go('/class/preview'),

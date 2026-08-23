@@ -58,3 +58,9 @@ class ClassroomNotFoundException implements Exception {
 
   final String shareCode;
 }
+
+class ClassroomAlreadyExistsException implements Exception {
+  const ClassroomAlreadyExistsException([this.shareCode]);
+
+  final String? shareCode;
+}

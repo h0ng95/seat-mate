@@ -29,7 +29,7 @@ Future<void> openMyClassrooms(BuildContext context, WidgetRef ref) async {
     final classrooms = await ref.read(savedClassroomsProvider(key).future);
     if (!context.mounted) return;
     if (classrooms.isNotEmpty) {
-      context.go('/my');
+      context.go('/class/${classrooms.first.shareCode}');
       return;
     }
     ScaffoldMessenger.of(context)

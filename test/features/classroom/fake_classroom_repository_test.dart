@@ -78,6 +78,27 @@ void main() {
     );
   });
 
+  test('blocks creating a second active classroom', () async {
+    final repository = FakeClassroomRepository();
+    final command = CreateClassroomCommand(
+      ownerName: Nickname('재홍'),
+      ownerBirth: BirthProfile(date: LocalDate.parseIso('1995-06-12')),
+    );
+
+    final created = await repository.createClassroom(command);
+
+    expect(
+      () => repository.createClassroom(command),
+      throwsA(
+        isA<ClassroomAlreadyExistsException>().having(
+          (error) => error.shareCode,
+          'shareCode',
+          created.shareCode,
+        ),
+      ),
+    );
+  });
+
   test(
     'blocks a thirteenth member when all twelve seats are occupied',
     () async {

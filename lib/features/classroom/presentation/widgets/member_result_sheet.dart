@@ -17,6 +17,8 @@ Future<void> showMemberResultSheet(
   ClassroomSceneMember member, {
   required String shareCode,
   required String ownerName,
+  required bool isViewerOwner,
+  required bool canCreateClassroom,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -31,6 +33,8 @@ Future<void> showMemberResultSheet(
         member: member,
         shareCode: shareCode,
         ownerName: ownerName,
+        isViewerOwner: isViewerOwner,
+        canCreateClassroom: canCreateClassroom,
       ),
     ),
   );
@@ -41,12 +45,16 @@ class MemberResultSheet extends ConsumerWidget {
     required this.member,
     required this.shareCode,
     required this.ownerName,
+    required this.isViewerOwner,
+    required this.canCreateClassroom,
     super.key,
   });
 
   final ClassroomSceneMember member;
   final String shareCode;
   final String ownerName;
+  final bool isViewerOwner;
+  final bool canCreateClassroom;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,7 +77,9 @@ class MemberResultSheet extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    member.isOwner ? '나의 사주 원국' : '명리로 보는 우리 사이',
+                    member.isOwner
+                        ? (isViewerOwner ? '나의 사주 원국' : '$ownerName님의 사주 원국')
+                        : '명리로 보는 우리 사이',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -193,15 +203,17 @@ class MemberResultSheet extends ConsumerWidget {
                     icon: const Icon(Icons.ios_share_rounded),
                     label: const Text('우리 사이 결과 공유하기'),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/create');
-                    },
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('나도 내 반 만들어보기'),
-                  ),
+                  if (canCreateClassroom) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go('/create');
+                      },
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('나도 내 반 만들어보기'),
+                    ),
+                  ],
                 ],
               ),
             ),

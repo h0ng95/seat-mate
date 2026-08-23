@@ -275,6 +275,14 @@ class SupabaseClassroomRepository implements ClassroomRepository {
   }
 
   Object _mapException(PostgrestException error, String shareCode) {
+    if (error.message.contains('CLASSROOM_ALREADY_EXISTS')) {
+      final existingShareCode = error.details is String
+          ? (error.details as String).trim()
+          : '';
+      return ClassroomAlreadyExistsException(
+        existingShareCode.isEmpty ? null : existingShareCode,
+      );
+    }
     if (error.message.contains('CLASSROOM_FULL')) {
       return const ClassroomFullException();
     }

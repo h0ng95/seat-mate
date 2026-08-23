@@ -9,6 +9,7 @@ import '../../../core/values/nickname.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/app_text_field.dart';
 import '../../../shared/presentation/chalk_loading.dart';
+import '../../../shared/presentation/error_state.dart';
 import '../../../shared/presentation/primary_button.dart';
 import '../../../shared/presentation/separated_digits_input_formatter.dart';
 import '../../character/presentation/pixel_character.dart';
@@ -68,6 +69,43 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     }
     if (config.hasSupabase && authState.value == null) {
       return const AppScaffold(child: _CreateLoginRequired());
+    }
+
+    final user = authState.value;
+    if (config.hasSupabase && user != null) {
+      final classroomsState = ref.watch(savedClassroomsProvider(user.id));
+      if (classroomsState.isLoading) {
+        return const AppScaffold(
+          child: SizedBox(
+            height: 360,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        );
+      }
+      if (classroomsState.hasError) {
+        return AppScaffold(
+          child: SizedBox(
+            height: 360,
+            child: Center(
+              child: AppErrorState(
+                title: '내 반을 확인하지 못했어요.',
+                message: '잠시 후 다시 확인해 주세요.',
+                actionLabel: '다시 확인',
+                onAction: () =>
+                    ref.invalidate(savedClassroomsProvider(user.id)),
+              ),
+            ),
+          ),
+        );
+      }
+      final classrooms = classroomsState.value ?? const [];
+      if (classrooms.isNotEmpty) {
+        return AppScaffold(
+          child: _ExistingClassroomRedirect(
+            shareCode: classrooms.first.shareCode,
+          ),
+        );
+      }
     }
 
     final createState = ref.watch(createClassroomControllerProvider);
@@ -310,6 +348,16 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
         );
     if (classroom != null && mounted) {
       context.go('/class/${classroom.shareCode}');
+      return;
+    }
+    final error = ref.read(createClassroomControllerProvider)?.error;
+    if (error case ClassroomAlreadyExistsException(:final shareCode)) {
+      if (!mounted) return;
+      if (shareCode != null) {
+        context.go('/class/$shareCode');
+      } else {
+        context.go('/my');
+      }
     }
   }
 
@@ -411,6 +459,35 @@ class _CreateLoginRequired extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         const KakaoLoginButton(),
       ],
+    );
+  }
+}
+
+class _ExistingClassroomRedirect extends StatefulWidget {
+  const _ExistingClassroomRedirect({required this.shareCode});
+
+  final String shareCode;
+
+  @override
+  State<_ExistingClassroomRedirect> createState() =>
+      _ExistingClassroomRedirectState();
+}
+
+class _ExistingClassroomRedirectState
+    extends State<_ExistingClassroomRedirect> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go('/class/${widget.shareCode}');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 360,
+      child: Center(child: ChalkLoading(messages: ['이미 만든 내 반으로 돌아가는 중...'])),
     );
   }
 }

@@ -9,6 +9,7 @@ import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/error_state.dart';
+import '../../auth/application/auth_providers.dart';
 import '../../sharing/application/share_providers.dart';
 import '../../sharing/application/share_service.dart';
 import '../application/classroom_providers.dart';
@@ -30,6 +31,21 @@ class ClassroomPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final config = ref.watch(appConfigProvider);
+    final authState = ref.watch(authUserProvider);
+    final user = authState.value;
+    AsyncValue<List<SavedClassroomSummary>>? savedClassroomsState;
+    if (config.hasSupabase && user != null) {
+      savedClassroomsState = ref.watch(savedClassroomsProvider(user.id));
+    }
+    final savedClassrooms = savedClassroomsState?.value ?? const [];
+    final isViewerOwner = savedClassrooms.any(
+      (classroom) => classroom.shareCode == shareCode,
+    );
+    final canCreateClassroom =
+        !config.hasSupabase ||
+        (!authState.isLoading && user == null) ||
+        (savedClassroomsState?.hasValue == true && savedClassrooms.isEmpty);
     final classroomState = ref.watch(classroomProvider(shareCode));
     return AppScaffold(
       actions: [
@@ -53,7 +69,11 @@ class ClassroomPage extends ConsumerWidget {
             ),
           ),
         ),
-        data: (classroom) => _ClassroomContent(classroom: classroom),
+        data: (classroom) => _ClassroomContent(
+          classroom: classroom,
+          isViewerOwner: isViewerOwner,
+          canCreateClassroom: canCreateClassroom,
+        ),
       ),
     );
   }
@@ -78,9 +98,15 @@ class ClassroomPage extends ConsumerWidget {
 }
 
 class _ClassroomContent extends StatefulWidget {
-  const _ClassroomContent({required this.classroom});
+  const _ClassroomContent({
+    required this.classroom,
+    required this.isViewerOwner,
+    required this.canCreateClassroom,
+  });
 
   final Classroom classroom;
+  final bool isViewerOwner;
+  final bool canCreateClassroom;
 
   @override
   State<_ClassroomContent> createState() => _ClassroomContentState();
@@ -205,6 +231,8 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                       member,
                       shareCode: _classroom.shareCode,
                       ownerName: _classroom.ownerName.display,
+                      isViewerOwner: widget.isViewerOwner,
+                      canCreateClassroom: widget.canCreateClassroom,
                     ),
                   ),
                 ),
@@ -277,6 +305,8 @@ class _ClassroomContentState extends State<_ClassroomContent> {
             sceneMember,
             shareCode: _classroom.shareCode,
             ownerName: _classroom.ownerName.display,
+            isViewerOwner: widget.isViewerOwner,
+            canCreateClassroom: widget.canCreateClassroom,
           );
         }
       });
@@ -305,6 +335,8 @@ class _ClassroomContentState extends State<_ClassroomContent> {
           sceneMember,
           shareCode: _classroom.shareCode,
           ownerName: _classroom.ownerName.display,
+          isViewerOwner: widget.isViewerOwner,
+          canCreateClassroom: widget.canCreateClassroom,
         );
       }
     });

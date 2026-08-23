@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seat_mate/app/app_config.dart';
+import 'package:seat_mate/core/values/nickname.dart';
+import 'package:seat_mate/features/auth/application/auth_providers.dart';
+import 'package:seat_mate/features/auth/domain/signed_in_user.dart';
 import 'package:seat_mate/features/classroom/application/classroom_providers.dart';
+import 'package:seat_mate/features/classroom/domain/classroom.dart';
 import 'package:seat_mate/features/classroom/presentation/classroom_page.dart';
 import 'package:seat_mate/features/sharing/application/share_providers.dart';
 import 'package:seat_mate/features/sharing/application/share_service.dart';
@@ -63,6 +67,48 @@ void main() {
     expect(find.text('케미 지수'), findsOneWidget);
     expect(find.text('두 사람의 원국'), findsOneWidget);
     expect(find.text('점수 계산 근거'), findsOneWidget);
+    expect(find.text('나도 내 반 만들어보기'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hides the create CTA from the classroom owner', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appConfigProvider.overrideWithValue(
+            const AppConfig(
+              baseUrl: 'https://seat.example',
+              supabaseUrl: 'https://project.supabase.co',
+              supabasePublishableKey: 'publishable-key',
+            ),
+          ),
+          authUserProvider.overrideWith(
+            (ref) => Stream.value(
+              const SignedInUser(id: 'owner-user', displayName: '재홍'),
+            ),
+          ),
+          savedClassroomsProvider('owner-user').overrideWith(
+            (ref) async => [
+              SavedClassroomSummary(
+                id: 'preview-classroom',
+                shareCode: 'preview',
+                ownerName: Nickname('재홍'),
+                memberCount: 4,
+                createdAt: DateTime(2026),
+              ),
+            ],
+          ),
+        ],
+        child: const MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('seat-5')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('나의 사주 원국'), findsOneWidget);
+    expect(find.text('나도 내 반 만들어보기'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

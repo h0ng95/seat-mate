@@ -74,11 +74,6 @@ class MyClassroomsPage extends ConsumerWidget {
                   ],
                 ),
               ),
-              FilledButton.icon(
-                onPressed: () => context.go('/create'),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('새 반'),
-              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
