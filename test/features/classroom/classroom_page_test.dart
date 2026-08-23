@@ -55,7 +55,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('lets one student wander and return to their seat', (
+  testWidgets('shows a brief emote without moving a student away', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 800);
@@ -70,26 +70,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('classroom-wandering-student')),
-      findsNothing,
-    );
-
-    await tester.pump(const Duration(milliseconds: 2700));
+    await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump();
 
-    expect(
-      find.byKey(const ValueKey('classroom-wandering-student')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('seat-emote-0')), findsOneWidget);
+    expect(find.text('😊'), findsOneWidget);
+    expect(find.byKey(const ValueKey('seat-0')), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 6900));
+    await tester.pump(const Duration(milliseconds: 1100));
     await tester.pump();
 
-    expect(
-      find.byKey(const ValueKey('classroom-wandering-student')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('seat-emote-0')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

@@ -6,7 +6,6 @@ import '../../../../app/app_colors.dart';
 import '../models/classroom_scene_member.dart';
 import 'classroom_seat.dart';
 import 'seat_assignment_animation.dart';
-import 'wandering_student.dart';
 
 class ClassroomScene extends StatefulWidget {
   const ClassroomScene({
@@ -27,12 +26,20 @@ class ClassroomScene extends StatefulWidget {
 }
 
 class _ClassroomSceneState extends State<ClassroomScene> {
-  Timer? _wanderTimer;
-  Timer? _idleTimer;
-  int? _walkingSeatIndex;
-  int? _idleSeatIndex;
-  var _wanderCursor = 0;
-  var _idleCursor = 0;
+  static const _momentSequence = [
+    SeatIdleMotion.emote,
+    SeatIdleMotion.lookLeft,
+    SeatIdleMotion.bob,
+    SeatIdleMotion.lookRight,
+    SeatIdleMotion.emote,
+  ];
+  static const _emotes = ['😊', '✨', '😴', '📚', '💛', '🤔'];
+
+  Timer? _momentTimer;
+  int? _activeSeatIndex;
+  var _activeMotion = SeatIdleMotion.none;
+  String? _activeEmote;
+  var _momentCursor = 0;
   var _motionDisabled = false;
 
   @override
@@ -40,21 +47,17 @@ class _ClassroomSceneState extends State<ClassroomScene> {
     super.didChangeDependencies();
     final disabled = MediaQuery.disableAnimationsOf(context);
     if (_motionDisabled == disabled &&
-        (_motionDisabled || _wanderTimer != null)) {
+        (_motionDisabled || _momentTimer != null)) {
       return;
     }
     _motionDisabled = disabled;
     if (disabled) {
-      _wanderTimer?.cancel();
-      _idleTimer?.cancel();
-      _wanderTimer = null;
-      _idleTimer = null;
-      _walkingSeatIndex = null;
-      _idleSeatIndex = null;
+      _momentTimer?.cancel();
+      _momentTimer = null;
+      _clearMoment();
       return;
     }
-    _scheduleWander(const Duration(milliseconds: 2600));
-    _scheduleIdle(const Duration(milliseconds: 1100));
+    _scheduleMoment(const Duration(milliseconds: 1100));
   }
 
   @override
@@ -63,83 +66,65 @@ class _ClassroomSceneState extends State<ClassroomScene> {
     final seatIndexes = widget.members
         .map((member) => member.seatIndex)
         .toSet();
-    if (!seatIndexes.contains(_walkingSeatIndex) ||
+    if (!seatIndexes.contains(_activeSeatIndex) ||
         widget.enteringMember != null) {
-      _walkingSeatIndex = null;
-    }
-    if (!seatIndexes.contains(_idleSeatIndex)) {
-      _idleSeatIndex = null;
+      _clearMoment();
     }
     if (oldWidget.enteringMember != widget.enteringMember &&
         widget.enteringMember == null) {
-      _scheduleWander(const Duration(milliseconds: 1800));
+      _scheduleMoment(const Duration(milliseconds: 900));
     }
   }
 
   @override
   void dispose() {
-    _wanderTimer?.cancel();
-    _idleTimer?.cancel();
+    _momentTimer?.cancel();
     super.dispose();
   }
 
-  void _scheduleWander(Duration delay) {
-    if (_motionDisabled || _wanderTimer != null || _walkingSeatIndex != null) {
-      return;
-    }
-    _wanderTimer = Timer(delay, () {
-      _wanderTimer = null;
+  void _scheduleMoment(Duration delay) {
+    if (_motionDisabled || _momentTimer != null) return;
+    _momentTimer = Timer(delay, () {
+      _momentTimer = null;
       if (!mounted) return;
       if (widget.enteringMember != null || widget.members.isEmpty) {
-        _scheduleWander(const Duration(milliseconds: 1600));
+        _scheduleMoment(const Duration(milliseconds: 1000));
         return;
       }
       final members = [...widget.members]
         ..sort((a, b) => a.seatIndex.compareTo(b.seatIndex));
-      final member = members[_wanderCursor % members.length];
-      _wanderCursor += 1;
+      final member = members[_momentCursor % members.length];
+      final motion = _momentSequence[_momentCursor % _momentSequence.length];
+      final emote = motion == SeatIdleMotion.emote
+          ? _emotes[_momentCursor % _emotes.length]
+          : null;
+      _momentCursor += 1;
       setState(() {
-        _walkingSeatIndex = member.seatIndex;
-        if (_idleSeatIndex == member.seatIndex) _idleSeatIndex = null;
+        _activeSeatIndex = member.seatIndex;
+        _activeMotion = motion;
+        _activeEmote = emote;
       });
-    });
-  }
-
-  void _completeWander() {
-    if (!mounted) return;
-    setState(() => _walkingSeatIndex = null);
-    _scheduleWander(const Duration(milliseconds: 2400));
-  }
-
-  void _scheduleIdle(Duration delay) {
-    if (_motionDisabled || _idleTimer != null) return;
-    _idleTimer = Timer(delay, () {
-      _idleTimer = null;
-      if (!mounted || widget.members.isEmpty) return;
-      final available =
-          widget.members
-              .where((member) => member.seatIndex != _walkingSeatIndex)
-              .toList()
-            ..sort((a, b) => a.seatIndex.compareTo(b.seatIndex));
-      if (available.isEmpty) {
-        _scheduleIdle(const Duration(milliseconds: 900));
-        return;
-      }
-      final member = available[_idleCursor % available.length];
-      _idleCursor += 1;
-      setState(() => _idleSeatIndex = member.seatIndex);
-      _idleTimer = Timer(const Duration(milliseconds: 320), () {
-        _idleTimer = null;
+      final visibleDuration = motion == SeatIdleMotion.emote
+          ? const Duration(milliseconds: 1050)
+          : const Duration(milliseconds: 720);
+      _momentTimer = Timer(visibleDuration, () {
+        _momentTimer = null;
         if (!mounted) return;
-        setState(() => _idleSeatIndex = null);
-        _scheduleIdle(const Duration(milliseconds: 1700));
+        setState(_clearMoment);
+        final pause = Duration(milliseconds: 1250 + (_momentCursor % 3) * 250);
+        _scheduleMoment(pause);
       });
     });
+  }
+
+  void _clearMoment() {
+    _activeSeatIndex = null;
+    _activeMotion = SeatIdleMotion.none;
+    _activeEmote = null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final walkingMember = _memberAt(_walkingSeatIndex);
     return AspectRatio(
       aspectRatio: 0.75,
       child: DecoratedBox(
@@ -211,8 +196,10 @@ class _ClassroomSceneState extends State<ClassroomScene> {
                       return ClassroomSeat(
                         seatIndex: index,
                         member: member,
-                        isAway: _walkingSeatIndex == index,
-                        isIdle: _idleSeatIndex == index,
+                        idleMotion: _activeSeatIndex == index
+                            ? _activeMotion
+                            : SeatIdleMotion.none,
+                        emote: _activeSeatIndex == index ? _activeEmote : null,
                         onTap: member == null
                             ? null
                             : () => widget.onMemberTap(member),
@@ -226,12 +213,6 @@ class _ClassroomSceneState extends State<ClassroomScene> {
                     characterSeed: member.characterSeed,
                     onComplete: widget.onEntryComplete ?? () {},
                   ),
-                if (walkingMember != null && widget.enteringMember == null)
-                  WanderingStudent(
-                    member: walkingMember,
-                    onTap: () => widget.onMemberTap(walkingMember),
-                    onComplete: _completeWander,
-                  ),
               ],
             ),
           ),
@@ -240,8 +221,7 @@ class _ClassroomSceneState extends State<ClassroomScene> {
     );
   }
 
-  ClassroomSceneMember? _memberAt(int? seatIndex) {
-    if (seatIndex == null) return null;
+  ClassroomSceneMember? _memberAt(int seatIndex) {
     for (final member in widget.members) {
       if (member.seatIndex == seatIndex) return member;
     }

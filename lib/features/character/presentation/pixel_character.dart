@@ -12,6 +12,7 @@ class PixelCharacter extends StatelessWidget {
     this.semanticLabel,
     this.walkFrame = 0,
     this.mirrored = false,
+    this.gazeDirection = 0,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class PixelCharacter extends StatelessWidget {
   final String? semanticLabel;
   final int walkFrame;
   final bool mirrored;
+  final int gazeDirection;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class PixelCharacter extends StatelessWidget {
             appearance ?? CharacterGenerator.fromSeed(seed),
             walkFrame: walkFrame,
             mirrored: mirrored,
+            gazeDirection: gazeDirection,
           ),
           size: const Size(32, 40),
         ),
@@ -45,11 +48,13 @@ class _PixelCharacterPainter extends CustomPainter {
     this.parts, {
     required this.walkFrame,
     required this.mirrored,
+    required this.gazeDirection,
   });
 
   final CharacterParts parts;
   final int walkFrame;
   final bool mirrored;
+  final int gazeDirection;
 
   static const _outline = Color(0xFF302A2B);
   static const _shadow = Color(0x55352A24);
@@ -129,7 +134,7 @@ class _PixelCharacterPainter extends CustomPainter {
     _drawHairBack(canvas, hair, outline);
     _drawHead(canvas, outline, skin);
     _drawHairFront(canvas, hair, hairHighlight);
-    _drawFace(canvas, outline, accent);
+    _drawFace(canvas, outline, accent, gazeDirection);
     _drawAccessory(canvas, outline, accent, skin);
     if (walkFrame == 0) {
       _drawPose(canvas, outline, skin);
@@ -239,30 +244,36 @@ class _PixelCharacterPainter extends CustomPainter {
     }
   }
 
-  void _drawFace(Canvas canvas, Paint outline, Paint accent) {
+  void _drawFace(
+    Canvas canvas,
+    Paint outline,
+    Paint accent,
+    int gazeDirection,
+  ) {
+    final eyeShift = gazeDirection.clamp(-1, 1).toDouble();
     switch (parts.faceStyle) {
       case FaceStyle.smile:
-        _rect(canvas, 11, 14, 2, 2, outline);
-        _rect(canvas, 19, 14, 2, 2, outline);
+        _rect(canvas, 11 + eyeShift, 14, 2, 2, outline);
+        _rect(canvas, 19 + eyeShift, 14, 2, 2, outline);
         _rect(canvas, 14, 18, 4, 1, accent);
         _rect(canvas, 9, 17, 2, 1, _paint(const Color(0x66E87376)));
         _rect(canvas, 21, 17, 2, 1, _paint(const Color(0x66E87376)));
       case FaceStyle.blank:
-        _rect(canvas, 11, 14, 2, 2, outline);
-        _rect(canvas, 19, 14, 2, 2, outline);
+        _rect(canvas, 11 + eyeShift, 14, 2, 2, outline);
+        _rect(canvas, 19 + eyeShift, 14, 2, 2, outline);
         _rect(canvas, 15, 18, 3, 1, outline);
       case FaceStyle.playful:
-        _rect(canvas, 11, 14, 2, 2, outline);
-        _rect(canvas, 19, 15, 2, 1, outline);
+        _rect(canvas, 11 + eyeShift, 14, 2, 2, outline);
+        _rect(canvas, 19 + eyeShift, 15, 2, 1, outline);
         _rect(canvas, 14, 18, 5, 1, accent);
         _rect(canvas, 9, 17, 2, 1, _paint(const Color(0x66E87376)));
       case FaceStyle.sleepy:
-        _rect(canvas, 11, 15, 3, 1, outline);
-        _rect(canvas, 18, 15, 3, 1, outline);
+        _rect(canvas, 11 + eyeShift, 15, 3, 1, outline);
+        _rect(canvas, 18 + eyeShift, 15, 3, 1, outline);
         _rect(canvas, 15, 18, 2, 1, outline);
       case FaceStyle.calm:
-        _rect(canvas, 11, 14, 2, 2, outline);
-        _rect(canvas, 19, 14, 2, 2, outline);
+        _rect(canvas, 11 + eyeShift, 14, 2, 2, outline);
+        _rect(canvas, 19 + eyeShift, 14, 2, 2, outline);
         _rect(canvas, 15, 18, 2, 1, outline);
     }
   }
@@ -335,6 +346,7 @@ class _PixelCharacterPainter extends CustomPainter {
   bool shouldRepaint(covariant _PixelCharacterPainter oldDelegate) {
     return oldDelegate.parts != parts ||
         oldDelegate.walkFrame != walkFrame ||
-        oldDelegate.mirrored != mirrored;
+        oldDelegate.mirrored != mirrored ||
+        oldDelegate.gazeDirection != gazeDirection;
   }
 }
