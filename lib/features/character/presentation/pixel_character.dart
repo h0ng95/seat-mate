@@ -10,12 +10,16 @@ class PixelCharacter extends StatelessWidget {
     required this.seed,
     this.appearance,
     this.semanticLabel,
+    this.walkFrame = 0,
+    this.mirrored = false,
     super.key,
   });
 
   final String seed;
   final CharacterParts? appearance;
   final String? semanticLabel;
+  final int walkFrame;
+  final bool mirrored;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +30,8 @@ class PixelCharacter extends StatelessWidget {
         child: CustomPaint(
           painter: _PixelCharacterPainter(
             appearance ?? CharacterGenerator.fromSeed(seed),
+            walkFrame: walkFrame,
+            mirrored: mirrored,
           ),
           size: const Size(32, 40),
         ),
@@ -35,9 +41,15 @@ class PixelCharacter extends StatelessWidget {
 }
 
 class _PixelCharacterPainter extends CustomPainter {
-  const _PixelCharacterPainter(this.parts);
+  const _PixelCharacterPainter(
+    this.parts, {
+    required this.walkFrame,
+    required this.mirrored,
+  });
 
   final CharacterParts parts;
+  final int walkFrame;
+  final bool mirrored;
 
   static const _outline = Color(0xFF302A2B);
   static const _shadow = Color(0x55352A24);
@@ -95,6 +107,10 @@ class _PixelCharacterPainter extends CustomPainter {
     canvas.save();
     canvas.translate(offsetX, offsetY);
     canvas.scale(scale, scale);
+    if (mirrored) {
+      canvas.translate(32, 0);
+      canvas.scale(-1, 1);
+    }
 
     final outline = _paint(_outline);
     final hair = _paint(_hairColors[parts.hairColorIndex]);
@@ -108,19 +124,37 @@ class _PixelCharacterPainter extends CustomPainter {
     );
 
     _oval(canvas, 7, 36, 18, 3, _paint(_shadow));
-    _drawLegs(canvas, pants, shoe);
+    _drawLegs(canvas, pants, shoe, walkFrame);
     _drawBody(canvas, outline, top, skin);
     _drawHairBack(canvas, hair, outline);
     _drawHead(canvas, outline, skin);
     _drawHairFront(canvas, hair, hairHighlight);
     _drawFace(canvas, outline, accent);
     _drawAccessory(canvas, outline, accent, skin);
-    _drawPose(canvas, outline, skin);
+    if (walkFrame == 0) {
+      _drawPose(canvas, outline, skin);
+    }
 
     canvas.restore();
   }
 
-  void _drawLegs(Canvas canvas, Paint pants, Paint shoe) {
+  void _drawLegs(Canvas canvas, Paint pants, Paint shoe, int frame) {
+    if (frame == 1) {
+      _rect(canvas, 8, 31, 6, 6, pants);
+      _rect(canvas, 18, 32, 5, 5, pants);
+      _rect(canvas, 7, 36, 7, 2, shoe);
+      _rect(canvas, 18, 36, 6, 2, shoe);
+      _rect(canvas, 8, 36, 2, 1, _paint(const Color(0x44FFFFFF)));
+      return;
+    }
+    if (frame == 2) {
+      _rect(canvas, 9, 32, 5, 5, pants);
+      _rect(canvas, 18, 31, 6, 6, pants);
+      _rect(canvas, 8, 36, 6, 2, shoe);
+      _rect(canvas, 18, 36, 7, 2, shoe);
+      _rect(canvas, 19, 36, 2, 1, _paint(const Color(0x44FFFFFF)));
+      return;
+    }
     _rect(canvas, 10, 31, 5, 6, pants);
     _rect(canvas, 17, 31, 5, 6, pants);
     _rect(canvas, 9, 36, 6, 2, shoe);
@@ -299,6 +333,8 @@ class _PixelCharacterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PixelCharacterPainter oldDelegate) {
-    return oldDelegate.parts != parts;
+    return oldDelegate.parts != parts ||
+        oldDelegate.walkFrame != walkFrame ||
+        oldDelegate.mirrored != mirrored;
   }
 }

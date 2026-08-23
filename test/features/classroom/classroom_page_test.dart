@@ -55,6 +55,44 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('lets one student wander and return to their seat', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('classroom-wandering-student')),
+      findsNothing,
+    );
+
+    await tester.pump(const Duration(milliseconds: 2700));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('classroom-wandering-student')),
+      findsOneWidget,
+    );
+
+    await tester.pump(const Duration(milliseconds: 6900));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('classroom-wandering-student')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('shares the classroom URL from the top action', (tester) async {
     final shareService = _RecordingShareService();
     await tester.pumpWidget(

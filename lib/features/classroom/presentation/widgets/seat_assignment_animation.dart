@@ -51,7 +51,7 @@ class SeatAssignmentAnimation extends StatelessWidget {
                   : const Duration(milliseconds: 1400),
               curve: Curves.easeInOutCubic,
               onEnd: onComplete,
-              builder: (context, progress, child) {
+              builder: (context, progress, _) {
                 final position = Offset.lerp(start, target, progress)!;
                 final bob = reduceMotion
                     ? 0.0
@@ -65,15 +65,20 @@ class SeatAssignmentAnimation extends StatelessWidget {
                       top: position.dy + bob,
                       width: 36,
                       height: 48,
-                      child: child!,
+                      child: PixelCharacter(
+                        seed: characterSeed,
+                        semanticLabel: '새로운 전학생',
+                        walkFrame: reduceMotion
+                            ? 0
+                            : (progress * 18).floor().isEven
+                            ? 1
+                            : 2,
+                        mirrored: target.dx < start.dx,
+                      ),
                     ),
                   ],
                 );
               },
-              child: PixelCharacter(
-                seed: characterSeed,
-                semanticLabel: '새로운 전학생',
-              ),
             );
           },
         ),

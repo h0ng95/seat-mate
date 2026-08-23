@@ -9,12 +9,16 @@ class ClassroomSeat extends StatefulWidget {
     required this.seatIndex,
     required this.member,
     required this.onTap,
+    this.isAway = false,
+    this.isIdle = false,
     super.key,
   });
 
   final int seatIndex;
   final ClassroomSceneMember? member;
   final VoidCallback? onTap;
+  final bool isAway;
+  final bool isIdle;
 
   @override
   State<ClassroomSeat> createState() => _ClassroomSeatState();
@@ -55,14 +59,26 @@ class _ClassroomSeatState extends State<ClassroomSeat> {
                       height: constraints.maxHeight * 0.43,
                       child: const _ChairBack(),
                     ),
-                    if (person != null)
+                    if (person != null && !widget.isAway)
                       Positioned(
                         top: 0,
                         width: constraints.maxWidth * 0.43,
                         height: constraints.maxHeight * 0.62,
-                        child: PixelCharacter(
-                          seed: person.characterSeed,
-                          semanticLabel: '${person.name} 도트 캐릭터',
+                        child: AnimatedSlide(
+                          offset: widget.isIdle
+                              ? const Offset(0, -0.055)
+                              : Offset.zero,
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOutBack,
+                          child: AnimatedScale(
+                            scale: widget.isIdle ? 1.025 : 1,
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOutBack,
+                            child: PixelCharacter(
+                              seed: person.characterSeed,
+                              semanticLabel: '${person.name} 도트 캐릭터',
+                            ),
+                          ),
                         ),
                       ),
                     const Positioned.fill(
