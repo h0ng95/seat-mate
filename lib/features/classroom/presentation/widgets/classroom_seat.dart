@@ -197,46 +197,53 @@ class _CompatibilityHeartBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scoreLabel = score == null ? '?' : '$score%';
+    final fillFraction = ((score ?? 0).clamp(0, 100) / 100).toDouble();
     return Semantics(
       label: score == null ? '케미 지수 계산 중' : '케미 지수 $score퍼센트',
       child: ExcludeSemantics(
         child: SizedBox(
-          width: 38,
-          height: 32,
-          child: Stack(
-            alignment: Alignment.center,
+          width: 30,
+          height: 34,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Positioned(
-                left: 2,
-                top: 3,
-                child: Icon(
-                  Icons.favorite_rounded,
-                  size: 34,
+              SizedBox(
+                width: 27,
+                height: 23,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.favorite_rounded,
+                      size: 25,
+                      color: Color(0xFFFFD7CE),
+                    ),
+                    ClipRect(
+                      clipper: _VerticalFillClipper(fillFraction),
+                      child: const Icon(
+                        Icons.favorite_rounded,
+                        size: 25,
+                        color: AppColors.coral,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.favorite_border_rounded,
+                      size: 26,
+                      color: Color(0xFF74383B),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                scoreLabel,
+                style: const TextStyle(
                   color: Color(0xFF74383B),
-                ),
-              ),
-              const Positioned(
-                left: 3,
-                top: 1,
-                child: Icon(
-                  Icons.favorite_rounded,
-                  size: 32,
-                  color: AppColors.coral,
-                ),
-              ),
-              Positioned(
-                top: 9,
-                child: Text(
-                  scoreLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    height: 1,
-                    fontWeight: FontWeight.w900,
-                    shadows: [
-                      Shadow(color: Color(0xAA74383B), offset: Offset(1, 1)),
-                    ],
-                  ),
+                  fontSize: 9,
+                  height: 1,
+                  fontWeight: FontWeight.w900,
+                  shadows: [
+                    Shadow(color: AppColors.chalk, offset: Offset(0, 1)),
+                  ],
                 ),
               ),
             ],
@@ -244,6 +251,23 @@ class _CompatibilityHeartBadge extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _VerticalFillClipper extends CustomClipper<Rect> {
+  const _VerticalFillClipper(this.fraction);
+
+  final double fraction;
+
+  @override
+  Rect getClip(Size size) {
+    final fillHeight = size.height * fraction;
+    return Rect.fromLTWH(0, size.height - fillHeight, size.width, fillHeight);
+  }
+
+  @override
+  bool shouldReclip(covariant _VerticalFillClipper oldClipper) {
+    return oldClipper.fraction != fraction;
   }
 }
 
