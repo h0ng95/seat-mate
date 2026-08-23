@@ -22,6 +22,8 @@ class CharacterParts {
     required this.accessoryStyle,
     required this.poseStyle,
     required this.skinColorIndex,
+    required this.bottomColorIndex,
+    required this.shoeColorIndex,
   });
 
   final HairStyle hairStyle;
@@ -31,6 +33,60 @@ class CharacterParts {
   final AccessoryStyle accessoryStyle;
   final PoseStyle poseStyle;
   final int skinColorIndex;
+  final int bottomColorIndex;
+  final int shoeColorIndex;
+
+  CharacterParts copyWith({
+    HairStyle? hairStyle,
+    int? hairColorIndex,
+    int? topColorIndex,
+    FaceStyle? faceStyle,
+    AccessoryStyle? accessoryStyle,
+    PoseStyle? poseStyle,
+    int? skinColorIndex,
+    int? bottomColorIndex,
+    int? shoeColorIndex,
+  }) {
+    return CharacterParts(
+      hairStyle: hairStyle ?? this.hairStyle,
+      hairColorIndex: hairColorIndex ?? this.hairColorIndex,
+      topColorIndex: topColorIndex ?? this.topColorIndex,
+      faceStyle: faceStyle ?? this.faceStyle,
+      accessoryStyle: accessoryStyle ?? this.accessoryStyle,
+      poseStyle: poseStyle ?? this.poseStyle,
+      skinColorIndex: skinColorIndex ?? this.skinColorIndex,
+      bottomColorIndex: bottomColorIndex ?? this.bottomColorIndex,
+      shoeColorIndex: shoeColorIndex ?? this.shoeColorIndex,
+    );
+  }
+
+  Map<String, Object> toJson() => {
+    'hairStyle': hairStyle.name,
+    'hairColorIndex': hairColorIndex,
+    'topColorIndex': topColorIndex,
+    'faceStyle': faceStyle.name,
+    'accessoryStyle': accessoryStyle.name,
+    'poseStyle': poseStyle.name,
+    'skinColorIndex': skinColorIndex,
+    'bottomColorIndex': bottomColorIndex,
+    'shoeColorIndex': shoeColorIndex,
+  };
+
+  factory CharacterParts.fromJson(Map<String, Object?> json) {
+    return CharacterParts(
+      hairStyle: HairStyle.values.byName(json['hairStyle']! as String),
+      hairColorIndex: json['hairColorIndex']! as int,
+      topColorIndex: json['topColorIndex']! as int,
+      faceStyle: FaceStyle.values.byName(json['faceStyle']! as String),
+      accessoryStyle: AccessoryStyle.values.byName(
+        json['accessoryStyle']! as String,
+      ),
+      poseStyle: PoseStyle.values.byName(json['poseStyle']! as String),
+      skinColorIndex: json['skinColorIndex']! as int,
+      bottomColorIndex: json['bottomColorIndex']! as int,
+      shoeColorIndex: json['shoeColorIndex']! as int,
+    );
+  }
 
   @override
   bool operator ==(Object other) {
@@ -41,7 +97,9 @@ class CharacterParts {
         faceStyle == other.faceStyle &&
         accessoryStyle == other.accessoryStyle &&
         poseStyle == other.poseStyle &&
-        skinColorIndex == other.skinColorIndex;
+        skinColorIndex == other.skinColorIndex &&
+        bottomColorIndex == other.bottomColorIndex &&
+        shoeColorIndex == other.shoeColorIndex;
   }
 
   @override
@@ -53,5 +111,7 @@ class CharacterParts {
     accessoryStyle,
     poseStyle,
     skinColorIndex,
+    bottomColorIndex,
+    shoeColorIndex,
   );
 }

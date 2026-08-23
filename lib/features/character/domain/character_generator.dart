@@ -24,6 +24,8 @@ abstract final class CharacterGenerator {
       accessoryStyle: accessory,
       poseStyle: PoseStyle.values[_index(bytes[5], PoseStyle.values.length)],
       skinColorIndex: _index(bytes[6], 6),
+      bottomColorIndex: _index(bytes[7], 6),
+      shoeColorIndex: _index(bytes[8], 4),
     );
   }
 

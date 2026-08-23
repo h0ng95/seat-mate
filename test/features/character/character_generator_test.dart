@@ -17,8 +17,26 @@ void main() {
       expect(parts.hairColorIndex, inInclusiveRange(0, 5));
       expect(parts.topColorIndex, inInclusiveRange(0, 7));
       expect(parts.skinColorIndex, inInclusiveRange(0, 5));
+      expect(parts.bottomColorIndex, inInclusiveRange(0, 5));
+      expect(parts.shoeColorIndex, inInclusiveRange(0, 3));
       expect(parts.hairStyle, isA<HairStyle>());
       expect(parts.faceStyle, isA<FaceStyle>());
     }
+  });
+
+  test('appearance can be customized and serialized', () {
+    final generated = CharacterGenerator.fromSeed('custom-student');
+    final customized = generated.copyWith(
+      hairStyle: HairStyle.wave,
+      topColorIndex: 3,
+      bottomColorIndex: 4,
+      accessoryStyle: AccessoryStyle.headphones,
+    );
+
+    expect(customized.hairStyle, HairStyle.wave);
+    expect(customized.topColorIndex, 3);
+    expect(customized.bottomColorIndex, 4);
+    expect(customized.accessoryStyle, AccessoryStyle.headphones);
+    expect(CharacterParts.fromJson(customized.toJson()), customized);
   });
 }

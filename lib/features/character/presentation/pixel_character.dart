@@ -6,9 +6,15 @@ import '../domain/character_generator.dart';
 import '../domain/character_parts.dart';
 
 class PixelCharacter extends StatelessWidget {
-  const PixelCharacter({required this.seed, this.semanticLabel, super.key});
+  const PixelCharacter({
+    required this.seed,
+    this.appearance,
+    this.semanticLabel,
+    super.key,
+  });
 
   final String seed;
+  final CharacterParts? appearance;
   final String? semanticLabel;
 
   @override
@@ -18,7 +24,9 @@ class PixelCharacter extends StatelessWidget {
       label: semanticLabel,
       child: ExcludeSemantics(
         child: CustomPaint(
-          painter: _PixelCharacterPainter(CharacterGenerator.fromSeed(seed)),
+          painter: _PixelCharacterPainter(
+            appearance ?? CharacterGenerator.fromSeed(seed),
+          ),
           size: const Size(32, 40),
         ),
       ),
@@ -63,6 +71,22 @@ class _PixelCharacterPainter extends CustomPainter {
     Color(0xFF754536),
   ];
 
+  static const _bottomColors = [
+    Color(0xFF344252),
+    Color(0xFF4C5674),
+    Color(0xFF6B4A3C),
+    Color(0xFF477057),
+    Color(0xFF8B5C74),
+    Color(0xFF343238),
+  ];
+
+  static const _shoeColors = [
+    Color(0xFF25272C),
+    Color(0xFF584237),
+    Color(0xFFF0E6D7),
+    Color(0xFF9D4D43),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
     final scale = math.min(size.width / 32, size.height / 40);
@@ -77,15 +101,18 @@ class _PixelCharacterPainter extends CustomPainter {
     final skin = _paint(_skinColors[parts.skinColorIndex]);
     final top = _paint(_topColors[parts.topColorIndex]);
     final accent = _paint(const Color(0xFFE85F65));
-    final pants = _paint(const Color(0xFF344252));
-    final shoe = _paint(const Color(0xFF25272C));
+    final pants = _paint(_bottomColors[parts.bottomColorIndex]);
+    final shoe = _paint(_shoeColors[parts.shoeColorIndex]);
+    final hairHighlight = _paint(
+      Color.lerp(hair.color, const Color(0xFFFFFFFF), 0.2)!,
+    );
 
     _oval(canvas, 7, 36, 18, 3, _paint(_shadow));
     _drawLegs(canvas, pants, shoe);
     _drawBody(canvas, outline, top, skin);
     _drawHairBack(canvas, hair, outline);
     _drawHead(canvas, outline, skin);
-    _drawHairFront(canvas, hair);
+    _drawHairFront(canvas, hair, hairHighlight);
     _drawFace(canvas, outline, accent);
     _drawAccessory(canvas, outline, accent, skin);
     _drawPose(canvas, outline, skin);
@@ -98,6 +125,8 @@ class _PixelCharacterPainter extends CustomPainter {
     _rect(canvas, 17, 31, 5, 6, pants);
     _rect(canvas, 9, 36, 6, 2, shoe);
     _rect(canvas, 17, 36, 6, 2, shoe);
+    _rect(canvas, 10, 36, 2, 1, _paint(const Color(0x44FFFFFF)));
+    _rect(canvas, 18, 36, 2, 1, _paint(const Color(0x44FFFFFF)));
   }
 
   void _drawBody(Canvas canvas, Paint outline, Paint top, Paint skin) {
@@ -108,6 +137,8 @@ class _PixelCharacterPainter extends CustomPainter {
     _rect(canvas, 22, 23, 3, 8, outline);
     _rect(canvas, 22, 24, 2, 6, skin);
     _rect(canvas, 14, 22, 4, 2, _paint(const Color(0x55FFFFFF)));
+    _rect(canvas, 11, 22, 2, 2, _paint(const Color(0x33FFFFFF)));
+    _rect(canvas, 19, 22, 2, 2, _paint(const Color(0x33000000)));
   }
 
   void _drawHead(Canvas canvas, Paint outline, Paint skin) {
@@ -146,7 +177,7 @@ class _PixelCharacterPainter extends CustomPainter {
     }
   }
 
-  void _drawHairFront(Canvas canvas, Paint hair) {
+  void _drawHairFront(Canvas canvas, Paint hair, Paint highlight) {
     _rect(canvas, 9, 7, 14, 4, hair);
     switch (parts.hairStyle) {
       case HairStyle.parted:
@@ -167,6 +198,11 @@ class _PixelCharacterPainter extends CustomPainter {
       case HairStyle.beanie:
         _rect(canvas, 7, 8, 18, 3, hair);
     }
+    _rect(canvas, 11, 7, 5, 1, highlight);
+    if (parts.hairStyle == HairStyle.long ||
+        parts.hairStyle == HairStyle.wave) {
+      _rect(canvas, 9, 11, 1, 4, highlight);
+    }
   }
 
   void _drawFace(Canvas canvas, Paint outline, Paint accent) {
@@ -175,6 +211,8 @@ class _PixelCharacterPainter extends CustomPainter {
         _rect(canvas, 11, 14, 2, 2, outline);
         _rect(canvas, 19, 14, 2, 2, outline);
         _rect(canvas, 14, 18, 4, 1, accent);
+        _rect(canvas, 9, 17, 2, 1, _paint(const Color(0x66E87376)));
+        _rect(canvas, 21, 17, 2, 1, _paint(const Color(0x66E87376)));
       case FaceStyle.blank:
         _rect(canvas, 11, 14, 2, 2, outline);
         _rect(canvas, 19, 14, 2, 2, outline);
@@ -183,6 +221,7 @@ class _PixelCharacterPainter extends CustomPainter {
         _rect(canvas, 11, 14, 2, 2, outline);
         _rect(canvas, 19, 15, 2, 1, outline);
         _rect(canvas, 14, 18, 5, 1, accent);
+        _rect(canvas, 9, 17, 2, 1, _paint(const Color(0x66E87376)));
       case FaceStyle.sleepy:
         _rect(canvas, 11, 15, 3, 1, outline);
         _rect(canvas, 18, 15, 3, 1, outline);
