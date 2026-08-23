@@ -49,6 +49,7 @@ class CreateClassroomController extends Notifier<AsyncValue<Classroom>?> {
       () => ref.read(classroomRepositoryProvider).createClassroom(command),
     );
     state = result;
+    if (result.hasValue) ref.invalidate(savedClassroomsProvider);
     return result.value;
   }
 }

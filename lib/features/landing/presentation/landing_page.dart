@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/app_colors.dart';
 import '../../../app/app_constants.dart';
+import '../../../app/app_navigation.dart';
 import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/primary_button.dart';
@@ -62,7 +63,7 @@ class LandingPage extends ConsumerWidget {
                 if (config.hasSupabase && user != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   OutlinedButton.icon(
-                    onPressed: () => context.go('/my'),
+                    onPressed: () async => openMyClassrooms(context, ref),
                     icon: const Icon(Icons.school_outlined),
                     label: const Text('내 반 보기'),
                   ),

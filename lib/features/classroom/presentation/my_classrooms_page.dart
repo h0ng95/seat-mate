@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/app_colors.dart';
 import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
-import '../../../shared/presentation/primary_button.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/presentation/kakao_login_button.dart';
 import '../application/classroom_providers.dart';
@@ -85,7 +84,7 @@ class MyClassroomsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           classroomsState.when(
             data: (classrooms) => classrooms.isEmpty
-                ? const _EmptyClassrooms()
+                ? const _CreateFirstClassRedirect()
                 : Column(
                     children: [
                       for (final classroom in classrooms)
@@ -141,44 +140,28 @@ class _MyClassroomsLogin extends StatelessWidget {
   }
 }
 
-class _EmptyClassrooms extends StatelessWidget {
-  const _EmptyClassrooms();
+class _CreateFirstClassRedirect extends StatefulWidget {
+  const _CreateFirstClassRedirect();
+
+  @override
+  State<_CreateFirstClassRedirect> createState() =>
+      _CreateFirstClassRedirectState();
+}
+
+class _CreateFirstClassRedirectState extends State<_CreateFirstClassRedirect> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go('/create');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.paperGreen,
-        border: Border.all(color: AppColors.leaf),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          children: [
-            const Icon(
-              Icons.chair_alt_outlined,
-              size: 44,
-              color: AppColors.board,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text('아직 만든 반이 없어요', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '나의 자리를 찾고 친구들을 초대해 보세요.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            PrimaryButton(
-              label: '첫 반 만들기',
-              icon: Icons.add_rounded,
-              onPressed: () => context.go('/create'),
-            ),
-          ],
-        ),
-      ),
+    return const SizedBox(
+      height: 280,
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/app_colors.dart';
 import '../../app/app_constants.dart';
+import '../../app/app_navigation.dart';
 import '../../app/app_spacing.dart';
 
 class AppScaffold extends StatelessWidget {
@@ -117,11 +119,11 @@ class _AppHeader extends StatelessWidget {
   }
 }
 
-class _AppBottomNavigation extends StatelessWidget {
+class _AppBottomNavigation extends ConsumerWidget {
   const _AppBottomNavigation();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final path =
         GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
         '/';
@@ -147,14 +149,14 @@ class _AppBottomNavigation extends StatelessWidget {
             ),
             child: NavigationBar(
               selectedIndex: selectedIndex,
-              onDestinationSelected: (index) {
+              onDestinationSelected: (index) async {
                 switch (index) {
                   case 0:
                     context.go('/');
                   case 1:
                     context.go('/create');
                   case 2:
-                    context.go('/my');
+                    await openMyClassrooms(context, ref);
                 }
               },
               destinations: const [
