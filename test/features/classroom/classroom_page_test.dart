@@ -26,6 +26,8 @@ void main() {
     for (var index = 0; index < 9; index++) {
       expect(find.byKey(ValueKey('seat-$index')), findsOneWidget);
     }
+    expect(find.text('우리 반 궁합 순위'), findsOneWidget);
+    expect(find.byKey(const ValueKey('compatibility-rank-1')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

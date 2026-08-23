@@ -18,6 +18,7 @@ import '../domain/relationship.dart';
 import '../domain/seat_mate_algorithm.dart';
 import 'models/classroom_scene_member.dart';
 import 'widgets/classroom_scene.dart';
+import 'widgets/compatibility_ranking_board.dart';
 import 'widgets/join_classroom_form.dart';
 import 'widgets/member_result_sheet.dart';
 
@@ -195,6 +196,12 @@ class _ClassroomContentState extends State<_ClassroomContent> {
                     ownerName: _classroom.ownerName.display,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                CompatibilityRankingBoard(
+                  ownerName: _classroom.ownerName.display,
+                  members: _classroom.members,
+                ),
+                const SizedBox(height: AppSpacing.sm),
               ],
             ),
           ),
