@@ -43,7 +43,7 @@ class ClassroomScene extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/classroom-room-v4.png',
+                    'assets/images/classroom-room-v5.png',
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.none,
                     semanticLabel: '나무 바닥과 칠판, 창문, 책장이 있는 도트 교실',
