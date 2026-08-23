@@ -1,66 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/app_colors.dart';
 import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
+import '../../../shared/presentation/chalk_loading.dart';
+import '../../../shared/presentation/error_state.dart';
+import '../application/classroom_providers.dart';
+import '../domain/classroom.dart';
+import '../domain/relationship.dart';
+import '../domain/seat_mate_algorithm.dart';
 import 'models/classroom_scene_member.dart';
 import 'widgets/classroom_scene.dart';
 import 'widgets/member_result_sheet.dart';
 
-class ClassroomPage extends StatelessWidget {
+class ClassroomPage extends ConsumerWidget {
   const ClassroomPage({required this.shareCode, super.key});
 
   final String shareCode;
 
-  static const _members = [
-    ClassroomSceneMember(
-      name: '지현',
-      seatIndex: 0,
-      relationshipTitle: '정신적 반장',
-      relationshipDescription: '흔들릴 때 은근히 정신 차리게 만들어주는 사람.',
-      seatDescription: '재홍님의 앞쪽 자리',
-      focusDelta: 62,
-      joyDelta: 41,
-      color: Color(0xFF6F9E86),
-      characterSeed: '지현|1997-08-04',
-    ),
-    ClassroomSceneMember(
-      name: '재홍',
-      seatIndex: 4,
-      relationshipTitle: '은근한 핵심 인물',
-      relationshipDescription: '튀지는 않아도 사람들이 자연스럽게 주변에 모이는 자리.',
-      seatDescription: '우리 반 생성자',
-      focusDelta: 18,
-      joyDelta: 74,
-      color: Color(0xFF759EB5),
-      characterSeed: '재홍|1995-06-12',
-      isOwner: true,
-    ),
-    ClassroomSceneMember(
-      name: '민수',
-      seatIndex: 5,
-      relationshipTitle: '찰떡 짝꿍',
-      relationshipDescription: '말 안 해도 편하고, 붙어 있으면 하루가 금방 지나가는 관계.',
-      seatDescription: '재홍님의 오른쪽 자리',
-      focusDelta: -8,
-      joyDelta: 92,
-      color: Color(0xFFD38170),
-      characterSeed: '민수|1996-03-17',
-    ),
-    ClassroomSceneMember(
-      name: '현우',
-      seatIndex: 7,
-      relationshipTitle: '공동피고인',
-      relationshipDescription: '좋은 선택보다 재밌는 선택을 같이 할 가능성이 높은 사람.',
-      seatDescription: '재홍님의 뒷자리',
-      focusDelta: -38,
-      joyDelta: 92,
-      color: Color(0xFFC7A45E),
-      characterSeed: '현우|1995-11-23',
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final classroomState = ref.watch(classroomProvider(shareCode));
     return AppScaffold(
       actions: [
         IconButton(
@@ -69,46 +30,141 @@ class ClassroomPage extends StatelessWidget {
           icon: const Icon(Icons.ios_share_rounded),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  '재홍이네 반',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-              ),
-              Text(
-                '${_members.length} / 9명',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
+      child: classroomState.when(
+        loading: () =>
+            const SizedBox(height: 460, child: Center(child: ChalkLoading())),
+        error: (error, stackTrace) => SizedBox(
+          height: 460,
+          child: Center(
+            child: AppErrorState(
+              title: '앗, 교실을 못 찾았어요.',
+              message: '링크가 오래됐거나 잘못된 주소일 수 있어요.',
+              actionLabel: '다시 시도',
+              onAction: () => ref.invalidate(classroomProvider(shareCode)),
+            ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '오늘도 전학생을 기다리는 중',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ClassroomScene(
-            members: _members,
-            onMemberTap: (member) => showMemberResultSheet(context, member),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text('전학 올래?', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          const Text('이름과 생일을 입력하면 빈자리를 찾아줄게요.'),
-          const SizedBox(height: AppSpacing.md),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: const Text('내 자리 찾기'),
-          ),
-        ],
+        ),
+        data: (classroom) => _ClassroomContent(classroom: classroom),
       ),
     );
   }
 }
+
+class _ClassroomContent extends StatelessWidget {
+  const _ClassroomContent({required this.classroom});
+
+  final Classroom classroom;
+
+  @override
+  Widget build(BuildContext context) {
+    final sceneMembers = classroom.members
+        .map((member) => _toSceneMember(classroom, member))
+        .toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Text(
+                '${classroom.ownerName.display}이네 반',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ),
+            Text(
+              '${classroom.members.length} / 9명',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          classroom.isFull ? '아홉 자리가 모두 찼어요!' : '오늘도 전학생을 기다리는 중',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ClassroomScene(
+          members: sceneMembers,
+          onMemberTap: (member) => showMemberResultSheet(context, member),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          classroom.isFull ? '우리 반 완성!' : '전학 올래?',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          classroom.isFull
+              ? '이 반은 꽉 찼지만 자리 결과는 계속 구경할 수 있어요.'
+              : '이름과 생일을 입력하면 빈자리를 찾아줄게요.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        OutlinedButton.icon(
+          onPressed: classroom.isFull ? null : () {},
+          icon: Icon(
+            classroom.isFull
+                ? Icons.celebration_rounded
+                : Icons.person_add_alt_1_rounded,
+          ),
+          label: Text(classroom.isFull ? '우리 반 완성' : '내 자리 찾기'),
+        ),
+      ],
+    );
+  }
+
+  ClassroomSceneMember _toSceneMember(
+    Classroom classroom,
+    ClassroomMember member,
+  ) {
+    final relationship = member.relationship;
+    final profile = member.ownerProfile;
+    return ClassroomSceneMember(
+      name: member.name.display,
+      seatIndex: member.seatIndex,
+      relationshipTitle: member.isOwner ? profile!.title : relationship!.title,
+      relationshipDescription: member.isOwner
+          ? profile!.description
+          : relationship!.description,
+      seatDescription: member.isOwner
+          ? '우리 반 생성자'
+          : _relativeSeatDescription(
+              classroom.ownerSeatIndex,
+              member.seatIndex,
+            ),
+      focusDelta: member.focusDelta,
+      joyDelta: member.joyDelta,
+      color: _memberColors[member.seatIndex % _memberColors.length],
+      characterSeed: member.characterSeed,
+      isOwner: member.isOwner,
+    );
+  }
+
+  String _relativeSeatDescription(int ownerSeat, int memberSeat) {
+    final rowDelta = memberSeat ~/ 3 - ownerSeat ~/ 3;
+    final columnDelta = memberSeat % 3 - ownerSeat % 3;
+    if (rowDelta == 0 && columnDelta == -1) {
+      return '${classroom.ownerName.display}님의 왼쪽 자리';
+    }
+    if (rowDelta == 0 && columnDelta == 1) {
+      return '${classroom.ownerName.display}님의 오른쪽 자리';
+    }
+    if (rowDelta == -1 && columnDelta == 0) {
+      return '${classroom.ownerName.display}님의 앞자리';
+    }
+    if (rowDelta == 1 && columnDelta == 0) {
+      return '${classroom.ownerName.display}님의 뒷자리';
+    }
+    if (rowDelta.abs() == 1 && columnDelta.abs() == 1) {
+      return '${classroom.ownerName.display}님의 대각선 자리';
+    }
+    return '${classroom.ownerName.display}님과 조금 먼 자리';
+  }
+}
+
+const _memberColors = [
+  AppColors.leaf,
+  AppColors.sky,
+  AppColors.coral,
+  AppColors.yellow,
+];

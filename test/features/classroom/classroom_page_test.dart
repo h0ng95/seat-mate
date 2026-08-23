@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seat_mate/features/classroom/presentation/classroom_page.dart';
 
 void main() {
@@ -10,8 +11,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      const MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      const ProviderScope(
+        child: MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      ),
     );
+    await tester.pumpAndSettle();
 
     for (var index = 0; index < 9; index++) {
       expect(find.byKey(ValueKey('seat-$index')), findsOneWidget);
@@ -23,8 +27,11 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      const ProviderScope(
+        child: MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      ),
     );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('seat-5')));
     await tester.pumpAndSettle();
