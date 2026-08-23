@@ -126,6 +126,12 @@ class _AppBottomNavigation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final path =
+        GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
+        '/';
+    if (path.startsWith('/class/')) {
+      return const SizedBox.shrink();
+    }
     final config = ref.watch(appConfigProvider);
     final user = ref.watch(authUserProvider).value;
     final activeShareCode = ref.watch(activeClassroomShareCodeProvider);
@@ -136,9 +142,6 @@ class _AppBottomNavigation extends ConsumerWidget {
     if (activeShareCode != null || classrooms.isNotEmpty) {
       return const SizedBox.shrink();
     }
-    final path =
-        GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
-        '/';
     final selectedIndex = path.startsWith('/class') || path.startsWith('/my')
         ? 2
         : path.startsWith('/create')

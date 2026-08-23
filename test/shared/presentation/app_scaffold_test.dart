@@ -91,10 +91,25 @@ void main() {
     expect(find.text('내 반 만들기'), findsNothing);
     expect(router.routeInformationProvider.value.uri.path, '/');
   });
+
+  testWidgets('hides navigation inside a classroom', (tester) async {
+    final router = _router(initialLocation: '/class/friend123');
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(child: MaterialApp.router(routerConfig: router)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('교실'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('시작'), findsNothing);
+  });
 }
 
-GoRouter _router() {
+GoRouter _router({String? initialLocation}) {
   return GoRouter(
+    initialLocation: initialLocation,
     routes: [
       GoRoute(path: '/', builder: (context, state) => const _TestPage('시작')),
       GoRoute(
