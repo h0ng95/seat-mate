@@ -11,7 +11,7 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField).at(0), '재홍');
     await tester.enterText(find.byType(TextFormField).at(1), '1995-06-12');
-    await tester.tap(find.text('내 자리 찾기'));
+    await tester.tap(find.text('내 자리 운세 보기'));
     await tester.pump();
 
     expect(find.text('칠판 닦는 중...'), findsOneWidget);

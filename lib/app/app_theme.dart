@@ -69,6 +69,7 @@ abstract final class AppTheme {
           minimumSize: const Size.fromHeight(AppSpacing.controlHeight),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -99,12 +100,54 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.board, width: 2),
         ),
+        labelStyle: const TextStyle(
+          color: AppColors.inkSoft,
+          fontWeight: FontWeight.w700,
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: AppColors.board,
+          fontWeight: FontWeight.w800,
+        ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.error),
         ),
       ),
       dividerColor: AppColors.line,
+      navigationBarTheme: NavigationBarThemeData(
+        height: 68,
+        backgroundColor: AppColors.chalk,
+        indicatorColor: AppColors.paperGreen,
+        elevation: 0,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          return TextStyle(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.board
+                : AppColors.inkSoft,
+            fontSize: 11,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w900
+                : FontWeight.w600,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          return IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.board
+                : AppColors.inkSoft,
+            size: 21,
+          );
+        }),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.paper,
+        modalBarrierColor: Color(0x990F1713),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.boardDark,
+        contentTextStyle: TextStyle(color: AppColors.chalk),
+        behavior: SnackBarBehavior.floating,
+      ),
       splashFactory: InkSparkle.splashFactory,
     );
   }

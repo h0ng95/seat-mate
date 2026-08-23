@@ -42,19 +42,21 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
   @override
   Widget build(BuildContext context) {
     if (widget.isFull) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('우리 반 완성!', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          const Text('이 반은 이미 꽉 찼어요. 그래도 내 반을 만들어볼래요?'),
-          const SizedBox(height: AppSpacing.md),
-          PrimaryButton(
-            label: '내 반 만들기',
-            icon: Icons.add_rounded,
-            onPressed: () => context.go('/create'),
-          ),
-        ],
+      return _JoinPanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('우리 반 완성!', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.xs),
+            const Text('아홉 인연이 모두 모였어요. 이제 나만의 관계 교실을 만들어보세요.'),
+            const SizedBox(height: AppSpacing.md),
+            PrimaryButton(
+              label: '내 반 만들기',
+              icon: Icons.add_rounded,
+              onPressed: () => context.go('/create'),
+            ),
+          ],
+        ),
       );
     }
 
@@ -68,40 +70,61 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
       _ => null,
     };
 
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('전학 올래?', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          const Text('실명 대신 별명을 사용해도 좋아요.'),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            label: '이름 또는 별명',
-            hintText: '민수',
-            controller: _nameController,
-            validator: _validateName,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            label: '생년월일',
-            hintText: '1996-03-17',
-            controller: _birthController,
-            keyboardType: TextInputType.datetime,
-            validator: _validateBirthDate,
-          ),
-          if (errorMessage != null) ...[
+    return _JoinPanel(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.favorite_rounded, color: AppColors.coral),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    '우리 사이도 알아볼까요?',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '자리를 찾으면 하트 궁합과 관계 풀이가 함께 나와요.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              label: '이름 또는 별명',
+              hintText: '민수',
+              controller: _nameController,
+              validator: _validateName,
+            ),
             const SizedBox(height: AppSpacing.sm),
-            Text(errorMessage, style: const TextStyle(color: AppColors.error)),
+            AppTextField(
+              label: '생년월일',
+              hintText: '1996-03-17',
+              controller: _birthController,
+              keyboardType: TextInputType.datetime,
+              validator: _validateBirthDate,
+            ),
+            if (errorMessage != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                errorMessage,
+                style: const TextStyle(color: AppColors.error),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            PrimaryButton(
+              label: isLoading ? '관계 기운을 읽는 중...' : '내 자리와 하트 궁합 보기',
+              isLoading: isLoading,
+              onPressed: isLoading ? null : _join,
+            ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          PrimaryButton(
-            label: isLoading ? '자리를 찾는 중...' : '내 자리 찾기',
-            isLoading: isLoading,
-            onPressed: isLoading ? null : _join,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -155,5 +178,33 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
         .replaceAll(RegExp(r'[.\s/]+'), '-')
         .replaceAll(RegExp(r'-+'), '-');
     return LocalDate.parseIso(normalized);
+  }
+}
+
+class _JoinPanel extends StatelessWidget {
+  const _JoinPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.chalk,
+        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x17332F2C),
+            offset: Offset(0, 4),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: child,
+      ),
+    );
   }
 }

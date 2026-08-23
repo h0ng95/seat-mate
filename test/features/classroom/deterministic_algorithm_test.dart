@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seat_mate/core/values/local_date.dart';
 import 'package:seat_mate/core/values/nickname.dart';
 import 'package:seat_mate/features/classroom/domain/seat_mate_algorithm.dart';
+import 'package:seat_mate/features/classroom/domain/relationship.dart';
 
 void main() {
   const algorithm = SeatMateAlgorithmV1();
@@ -48,6 +49,24 @@ void main() {
     );
 
     expect(result.seatIndex, anyOf(7, 8));
+  });
+
+  test('relationship fortune is stable and stays inside the heart range', () {
+    final result = algorithm.deriveMember(
+      classroomCode: '8fj2kd9abc',
+      ownerAlgorithmSeed: 'owner-seed',
+      ownerSeatIndex: 4,
+      memberName: memberName,
+      memberBirthDate: memberBirth,
+    );
+    final fortune = result.relationship.fortune(
+      focusDelta: result.focusDelta,
+      joyDelta: result.joyDelta,
+    );
+
+    expect(fortune.heartScore, inInclusiveRange(42, 98));
+    expect(fortune.energy, isNotEmpty);
+    expect(fortune.advice, isNotEmpty);
   });
 
   test('rejects a tenth person when every seat is occupied', () {

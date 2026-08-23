@@ -124,16 +124,25 @@ class _ClassroomSeatState extends State<ClassroomSeat> {
                             ],
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(2),
-                            child: Icon(
-                              person.isOwner
-                                  ? Icons.star_rounded
-                                  : Icons.favorite_rounded,
-                              size: 12,
-                              color: person.isOwner
-                                  ? AppColors.yellow
-                                  : AppColors.coral,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 3,
+                              vertical: 2,
                             ),
+                            child: person.isOwner
+                                ? const Icon(
+                                    Icons.star_rounded,
+                                    size: 12,
+                                    color: AppColors.yellow,
+                                  )
+                                : Text(
+                                    '♥ ${person.fortune!.heartScore}%',
+                                    style: const TextStyle(
+                                      color: AppColors.coral,
+                                      fontSize: 8,
+                                      height: 1,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

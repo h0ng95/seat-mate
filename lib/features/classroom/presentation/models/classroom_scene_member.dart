@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/relationship.dart';
+
 class ClassroomSceneMember {
   const ClassroomSceneMember({
     required this.name,
@@ -11,6 +13,7 @@ class ClassroomSceneMember {
     required this.joyDelta,
     required this.color,
     required this.characterSeed,
+    required this.fortune,
     this.isOwner = false,
   });
 
@@ -23,5 +26,6 @@ class ClassroomSceneMember {
   final int joyDelta;
   final Color color;
   final String characterSeed;
+  final RelationshipFortune? fortune;
   final bool isOwner;
 }

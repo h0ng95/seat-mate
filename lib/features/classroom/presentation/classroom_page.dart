@@ -119,38 +119,67 @@ class _ClassroomContentState extends State<_ClassroomContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${_classroom.ownerName.display}이네 반',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
+                DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: AppColors.paperGreen,
+                    border: Border(
+                      left: BorderSide(color: AppColors.board, width: 4),
                     ),
-                    Text(
-                      '${_classroom.members.length} / 9명',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  child: Text(
-                    _enteringMember == null
-                        ? (_classroom.isFull
-                              ? '아홉 자리가 모두 찼어요!'
-                              : '오늘도 전학생을 기다리는 중')
-                        : '새로운 전학생이 왔어요!',
-                    key: ValueKey(
-                      _enteringMember?.name ?? _classroom.members.length,
-                    ),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: _enteringMember == null
-                          ? AppColors.inkSoft
-                          : AppColors.coral,
-                      fontWeight: FontWeight.w700,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_classroom.ownerName.display}의 관계 교실',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
+                              ),
+                              const SizedBox(height: 2),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                child: Text(
+                                  _enteringMember == null
+                                      ? (_classroom.isFull
+                                            ? '아홉 인연이 모두 모였어요!'
+                                            : '친구가 들어올 때마다 관계 풀이가 열려요.')
+                                      : '새로운 인연이 자리를 찾았어요!',
+                                  key: ValueKey(
+                                    _enteringMember?.name ??
+                                        _classroom.members.length,
+                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: _enteringMember == null
+                                            ? AppColors.inkSoft
+                                            : AppColors.coral,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Column(
+                          children: [
+                            const Icon(
+                              Icons.favorite_rounded,
+                              color: AppColors.coral,
+                            ),
+                            Text(
+                              '${_classroom.members.length} / 9',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -285,6 +314,10 @@ class _ClassroomContentState extends State<_ClassroomContent> {
       joyDelta: member.joyDelta,
       color: _memberColors[member.seatIndex % _memberColors.length],
       characterSeed: member.characterSeed,
+      fortune: relationship?.fortune(
+        focusDelta: member.focusDelta,
+        joyDelta: member.joyDelta,
+      ),
       isOwner: member.isOwner,
     );
   }

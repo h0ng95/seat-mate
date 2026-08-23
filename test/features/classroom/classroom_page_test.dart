@@ -43,6 +43,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('찰떡 짝꿍'), findsOneWidget);
+    expect(find.text('하트 궁합'), findsOneWidget);
+    expect(find.text('관계 사주 풀이'), findsOneWidget);
     expect(find.text('+92%'), findsOneWidget);
   });
 

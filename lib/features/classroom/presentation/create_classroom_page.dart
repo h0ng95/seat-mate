@@ -10,6 +10,7 @@ import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/app_text_field.dart';
 import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/primary_button.dart';
+import '../../character/presentation/pixel_character.dart';
 import '../application/classroom_providers.dart';
 import '../domain/classroom_repository.dart';
 import '../domain/seat_mate_algorithm.dart';
@@ -72,36 +73,77 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
         key: const ValueKey('input'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            '내 반을 만들어볼까요?',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          const Text('실명 대신 별명을 사용해도 좋아요.'),
-          const SizedBox(height: AppSpacing.xl),
-          AppTextField(
-            label: '이름 또는 별명',
-            hintText: '재홍',
-            controller: _nameController,
-            validator: _validateName,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            label: '생년월일',
-            hintText: '1995-06-12',
-            controller: _birthController,
-            keyboardType: TextInputType.datetime,
-            validator: _validateBirthDate,
-          ),
+          const _CreateGuide(),
           const SizedBox(height: AppSpacing.lg),
-          PrimaryButton(label: '내 자리 찾기', onPressed: _findSeat),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.chalk,
+              border: Border.all(color: AppColors.line),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x17332F2C),
+                  offset: Offset(0, 4),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '내 관계 교실 만들기',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '별명과 생일로 나의 자리부터 찾아볼게요.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AppTextField(
+                    label: '이름 또는 별명',
+                    hintText: '재홍',
+                    controller: _nameController,
+                    validator: _validateName,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(
+                    label: '생년월일',
+                    hintText: '1995-06-12',
+                    controller: _birthController,
+                    keyboardType: TextInputType.datetime,
+                    validator: _validateBirthDate,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  PrimaryButton(label: '내 자리 운세 보기', onPressed: _findSeat),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
-          Text(
-            '입력한 생일은 재미있는 자리 결과를 만드는 데만 사용해요.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft),
-            textAlign: TextAlign.center,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 17,
+                color: AppColors.inkSoft,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  '실명 대신 별명을 권장해요. 생일은 자리와 관계 결과를 만드는 데만 사용합니다.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -254,5 +296,53 @@ class _CreateClassroomPageState extends ConsumerState<CreateClassroomPage> {
     const rows = ['앞줄', '가운데 줄', '뒷줄'];
     const columns = ['창가', '가운데', '문 쪽'];
     return '${columns[seatIndex % 3]} ${rows[seatIndex ~/ 3]} 자리';
+  }
+}
+
+class _CreateGuide extends StatelessWidget {
+  const _CreateGuide();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 118,
+      child: ColoredBox(
+        color: AppColors.paperBlue,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 72,
+                height: 96,
+                child: PixelCharacter(seed: 'create-guide'),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '오늘 당신의 자리는 어디일까요?',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      '먼저 나의 자리 기운을 읽고 친구들을 초대해요.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
