@@ -35,7 +35,7 @@ class PlatformShareService implements ShareService {
     } catch (_) {
       // Clipboard is the browser-safe fallback when the platform share sheet fails.
     }
-    await Clipboard.setData(ClipboardData(text: url));
+    await Clipboard.setData(ClipboardData(text: payload));
     return ShareOutcome.copied;
   }
 

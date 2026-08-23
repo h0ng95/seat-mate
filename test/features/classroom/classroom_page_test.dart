@@ -163,7 +163,7 @@ void main() {
     await tester.tap(find.byTooltip('링크 공유하기'));
     await tester.pump();
 
-    expect(shareService.lastUrl, 'https://seat.example/class/preview');
+    expect(shareService.lastUrl, 'https://seat.example/?class=preview');
   });
 }
 

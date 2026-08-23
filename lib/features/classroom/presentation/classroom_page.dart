@@ -12,6 +12,7 @@ import '../../../shared/presentation/error_state.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../sharing/application/share_providers.dart';
 import '../../sharing/application/share_service.dart';
+import '../../sharing/domain/classroom_share_link.dart';
 import '../application/classroom_providers.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
@@ -83,12 +84,14 @@ class ClassroomPage extends ConsumerWidget {
 
   Future<void> _shareClassroom(BuildContext context, WidgetRef ref) async {
     final config = ref.read(appConfigProvider);
-    final baseUrl = config.baseUrl.replaceFirst(RegExp(r'/$'), '');
     final outcome = await ref
         .read(shareServiceProvider)
         .shareText(
           text: '우리 반에 자리 하나 남았어. 너 어디 앉는지 한번 해봐!',
-          url: '$baseUrl/class/$shareCode',
+          url: buildClassroomShareUrl(
+            baseUrl: config.baseUrl,
+            shareCode: shareCode,
+          ),
         );
     if (!context.mounted || outcome == ShareOutcome.dismissed) return;
     final message = outcome == ShareOutcome.copied

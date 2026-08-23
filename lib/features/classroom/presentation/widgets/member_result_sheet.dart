@@ -7,6 +7,7 @@ import '../../../../app/app_spacing.dart';
 import '../../../character/presentation/pixel_character.dart';
 import '../../../sharing/application/share_providers.dart';
 import '../../../sharing/application/share_service.dart';
+import '../../../sharing/domain/classroom_share_link.dart';
 import '../../application/classroom_providers.dart';
 import '../../domain/saju_chart.dart';
 import '../../domain/saju_compatibility.dart';
@@ -224,10 +225,7 @@ class MemberResultSheet extends ConsumerWidget {
   }
 
   Future<void> _shareResult(BuildContext context, WidgetRef ref) async {
-    final baseUrl = ref
-        .read(appConfigProvider)
-        .baseUrl
-        .replaceFirst(RegExp(r'/$'), '');
+    final baseUrl = ref.read(appConfigProvider).baseUrl;
     final compatibility = member.compatibility;
     final scoreText = compatibility == null
         ? ''
@@ -237,7 +235,7 @@ class MemberResultSheet extends ConsumerWidget {
         .shareText(
           text:
               '$ownerName이네 반에서 ${member.name}님은$scoreText ${member.relationshipTitle}! 너도 우리 사이를 확인해 봐.',
-          url: '$baseUrl/class/$shareCode',
+          url: buildClassroomShareUrl(baseUrl: baseUrl, shareCode: shareCode),
         );
     if (!context.mounted || outcome == ShareOutcome.dismissed) return;
     final message = outcome == ShareOutcome.copied
