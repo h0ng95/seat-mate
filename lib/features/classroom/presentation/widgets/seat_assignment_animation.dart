@@ -21,12 +21,12 @@ class SeatAssignmentAnimation extends StatelessWidget {
       child: IgnorePointer(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            const gridLeft = 42.0;
-            const gridTop = 92.0;
-            const gridHorizontalGap = 7.0;
-            const gridVerticalGap = 8.0;
-            final gridWidth = constraints.maxWidth - 84;
-            final gridHeight = constraints.maxHeight - 122;
+            final gridLeft = constraints.maxWidth * 0.085;
+            final gridTop = constraints.maxHeight * 0.313;
+            const gridHorizontalGap = 5.0;
+            const gridVerticalGap = 5.0;
+            final gridWidth = constraints.maxWidth - gridLeft * 2;
+            final gridHeight = constraints.maxHeight * 0.577;
             final cellWidth = (gridWidth - gridHorizontalGap * 2) / 3;
             final cellHeight = (gridHeight - gridVerticalGap * 2) / 3;
             final column = seatIndex % 3;
@@ -35,10 +35,13 @@ class SeatAssignmentAnimation extends StatelessWidget {
               gridLeft +
                   column * (cellWidth + gridHorizontalGap) +
                   cellWidth / 2 -
-                  16,
-              gridTop + row * (cellHeight + gridVerticalGap) + 3,
+                  18,
+              gridTop + row * (cellHeight + gridVerticalGap) + 4,
             );
-            final start = Offset(constraints.maxWidth - 30, 112);
+            final start = Offset(
+              constraints.maxWidth * 0.88,
+              constraints.maxHeight * 0.22,
+            );
 
             return TweenAnimationBuilder<double>(
               key: ValueKey('entering-$characterSeed-$seatIndex'),
@@ -60,8 +63,8 @@ class SeatAssignmentAnimation extends StatelessWidget {
                     Positioned(
                       left: position.dx,
                       top: position.dy + bob,
-                      width: 32,
-                      height: 44,
+                      width: 36,
+                      height: 48,
                       child: child!,
                     ),
                   ],

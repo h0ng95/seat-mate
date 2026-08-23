@@ -9,6 +9,8 @@ import '../domain/seat_mate_algorithm.dart';
 class FakeClassroomRepository implements ClassroomRepository {
   FakeClassroomRepository() {
     _classrooms['preview'] = _previewClassroom();
+    _classrooms['class00001'] = _previewClassroom(shareCode: 'class00001');
+    _sequence = 1;
   }
 
   final _algorithm = const SeatMateAlgorithmV1();
@@ -103,7 +105,7 @@ class FakeClassroomRepository implements ClassroomRepository {
     return JoinClassroomResult(classroom: updated, member: member);
   }
 
-  Classroom _previewClassroom() {
+  Classroom _previewClassroom({String shareCode = 'preview'}) {
     final ownerBirth = LocalDate.parseIso('1995-06-12');
     final owner = ClassroomMember(
       id: 'preview-owner',
@@ -136,7 +138,7 @@ class FakeClassroomRepository implements ClassroomRepository {
     });
     return Classroom(
       id: 'preview-classroom',
-      shareCode: 'preview',
+      shareCode: shareCode,
       ownerName: owner.name,
       ownerBirthDate: ownerBirth,
       ownerAlgorithmSeed: StableHash.hex('owner|${ownerBirth.iso}'),
