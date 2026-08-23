@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:seat_mate/app/app_config.dart';
+import 'package:seat_mate/features/classroom/application/classroom_providers.dart';
 import 'package:seat_mate/features/classroom/presentation/classroom_page.dart';
+import 'package:seat_mate/features/sharing/application/share_providers.dart';
+import 'package:seat_mate/features/sharing/application/share_service.dart';
 
 void main() {
   testWidgets('renders nine classroom seats at mobile width', (tester) async {
@@ -39,4 +43,42 @@ void main() {
     expect(find.text('찰떡 짝꿍'), findsOneWidget);
     expect(find.text('+92%'), findsOneWidget);
   });
+
+  testWidgets('shares the classroom URL from the top action', (tester) async {
+    final shareService = _RecordingShareService();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          shareServiceProvider.overrideWithValue(shareService),
+          appConfigProvider.overrideWithValue(
+            const AppConfig(
+              baseUrl: 'https://seat.example',
+              supabaseUrl: '',
+              supabasePublishableKey: '',
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: ClassroomPage(shareCode: 'preview')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('링크 공유하기'));
+    await tester.pump();
+
+    expect(shareService.lastUrl, 'https://seat.example/class/preview');
+  });
+}
+
+class _RecordingShareService implements ShareService {
+  String? lastUrl;
+
+  @override
+  Future<ShareOutcome> shareText({
+    required String text,
+    required String url,
+  }) async {
+    lastUrl = url;
+    return ShareOutcome.shared;
+  }
 }

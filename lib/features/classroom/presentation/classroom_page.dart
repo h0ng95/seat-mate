@@ -6,6 +6,8 @@ import '../../../app/app_spacing.dart';
 import '../../../shared/presentation/app_scaffold.dart';
 import '../../../shared/presentation/chalk_loading.dart';
 import '../../../shared/presentation/error_state.dart';
+import '../../sharing/application/share_providers.dart';
+import '../../sharing/application/share_service.dart';
 import '../application/classroom_providers.dart';
 import '../domain/classroom.dart';
 import '../domain/classroom_repository.dart';
@@ -28,7 +30,7 @@ class ClassroomPage extends ConsumerWidget {
       actions: [
         IconButton(
           tooltip: '링크 공유하기',
-          onPressed: () {},
+          onPressed: () => _shareClassroom(context, ref),
           icon: const Icon(Icons.ios_share_rounded),
         ),
       ],
@@ -49,6 +51,24 @@ class ClassroomPage extends ConsumerWidget {
         data: (classroom) => _ClassroomContent(classroom: classroom),
       ),
     );
+  }
+
+  Future<void> _shareClassroom(BuildContext context, WidgetRef ref) async {
+    final config = ref.read(appConfigProvider);
+    final baseUrl = config.baseUrl.replaceFirst(RegExp(r'/$'), '');
+    final outcome = await ref
+        .read(shareServiceProvider)
+        .shareText(
+          text: '우리 반에 자리 하나 남았어. 너 어디 앉는지 한번 해봐!',
+          url: '$baseUrl/class/$shareCode',
+        );
+    if (!context.mounted || outcome == ShareOutcome.dismissed) return;
+    final message = outcome == ShareOutcome.copied
+        ? '링크를 복사했어요.'
+        : '공유 화면을 열었어요.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -124,7 +144,12 @@ class _ClassroomContentState extends State<_ClassroomContent> {
           members: sceneMembers,
           enteringMember: _enteringMember,
           onEntryComplete: _completeEntry,
-          onMemberTap: (member) => showMemberResultSheet(context, member),
+          onMemberTap: (member) => showMemberResultSheet(
+            context,
+            member,
+            shareCode: _classroom.shareCode,
+            ownerName: _classroom.ownerName.display,
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         JoinClassroomForm(
@@ -144,7 +169,14 @@ class _ClassroomContentState extends State<_ClassroomContent> {
         context,
       ).showSnackBar(const SnackBar(content: Text('이미 이 반에 앉아 있어요!')));
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) showMemberResultSheet(context, sceneMember);
+        if (mounted) {
+          showMemberResultSheet(
+            context,
+            sceneMember,
+            shareCode: _classroom.shareCode,
+            ownerName: _classroom.ownerName.display,
+          );
+        }
       });
       return;
     }
@@ -164,7 +196,14 @@ class _ClassroomContentState extends State<_ClassroomContent> {
       _enteringMember = null;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) showMemberResultSheet(context, sceneMember);
+      if (mounted) {
+        showMemberResultSheet(
+          context,
+          sceneMember,
+          shareCode: _classroom.shareCode,
+          ownerName: _classroom.ownerName.display,
+        );
+      }
     });
   }
 

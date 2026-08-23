@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_colors.dart';
 import '../../../../app/app_spacing.dart';
 import '../../../character/presentation/pixel_character.dart';
+import '../../../sharing/application/share_providers.dart';
+import '../../../sharing/application/share_service.dart';
+import '../../application/classroom_providers.dart';
 import '../models/classroom_scene_member.dart';
 
 Future<void> showMemberResultSheet(
   BuildContext context,
-  ClassroomSceneMember member,
-) {
+  ClassroomSceneMember member, {
+  required String shareCode,
+  required String ownerName,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -16,17 +23,28 @@ Future<void> showMemberResultSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
     ),
-    builder: (context) => MemberResultSheet(member: member),
+    builder: (context) => MemberResultSheet(
+      member: member,
+      shareCode: shareCode,
+      ownerName: ownerName,
+    ),
   );
 }
 
-class MemberResultSheet extends StatelessWidget {
-  const MemberResultSheet({required this.member, super.key});
+class MemberResultSheet extends ConsumerWidget {
+  const MemberResultSheet({
+    required this.member,
+    required this.shareCode,
+    required this.ownerName,
+    super.key,
+  });
 
   final ClassroomSceneMember member;
+  final String shareCode;
+  final String ownerName;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
       top: false,
       child: Padding(
@@ -98,10 +116,46 @@ class MemberResultSheet extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.lg),
+            FilledButton.icon(
+              onPressed: () => _shareResult(context, ref),
+              icon: const Icon(Icons.ios_share_rounded),
+              label: const Text('내 자리 결과 공유하기'),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.go('/create');
+              },
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('나도 내 반 만들어보기'),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _shareResult(BuildContext context, WidgetRef ref) async {
+    final baseUrl = ref
+        .read(appConfigProvider)
+        .baseUrl
+        .replaceFirst(RegExp(r'/$'), '');
+    final outcome = await ref
+        .read(shareServiceProvider)
+        .shareText(
+          text:
+              '$ownerName이네 반에서 ${member.name}님은 ${member.relationshipTitle}! 너도 어디 앉는지 해봐.',
+          url: '$baseUrl/class/$shareCode',
+        );
+    if (!context.mounted || outcome == ShareOutcome.dismissed) return;
+    final message = outcome == ShareOutcome.copied
+        ? '링크를 복사했어요.'
+        : '공유 화면을 열었어요.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
