@@ -8,6 +8,7 @@ import 'package:seat_mate/core/values/nickname.dart';
 import 'package:seat_mate/features/auth/application/auth_providers.dart';
 import 'package:seat_mate/features/auth/domain/signed_in_user.dart';
 import 'package:seat_mate/features/classroom/application/classroom_providers.dart';
+import 'package:seat_mate/features/classroom/data/fake_classroom_repository.dart';
 import 'package:seat_mate/features/classroom/domain/classroom.dart';
 import 'package:seat_mate/features/classroom/presentation/classroom_page.dart';
 import 'package:seat_mate/features/sharing/application/share_providers.dart';
@@ -165,6 +166,51 @@ void main() {
 
     expect(shareService.lastUrl, 'https://seat.example/?class=preview');
   });
+
+  testWidgets('reloads the latest seats only from the refresh action', (
+    tester,
+  ) async {
+    final preview = (await tester.runAsync(
+      () => FakeClassroomRepository().getClassroom('preview'),
+    ))!;
+    final liveClassroom = Classroom(
+      id: preview.id,
+      shareCode: 'live-class',
+      ownerName: preview.ownerName,
+      ownerBirthProfile: preview.ownerBirthProfile,
+      ownerAlgorithmSeed: preview.ownerAlgorithmSeed,
+      ownerSeatIndex: preview.ownerSeatIndex,
+      members: preview.members,
+      algorithmVersion: preview.algorithmVersion,
+    );
+    final repository = _RefreshingClassroomRepository(
+      liveClassroom.copyWith(members: [liveClassroom.members.first]),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [classroomRepositoryProvider.overrideWithValue(repository)],
+        child: const MaterialApp(home: ClassroomPage(shareCode: 'live-class')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 / 12'), findsOneWidget);
+    expect(repository.loadCount, 1);
+
+    repository.current = liveClassroom.copyWith(
+      members: liveClassroom.members.take(2).toList(growable: false),
+    );
+    await tester.tap(find.byTooltip('교실 새로고침'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.text('2 / 12'), findsOneWidget);
+    expect(repository.loadCount, 2);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
 
 class _RecordingShareService implements ShareService {
@@ -186,5 +232,18 @@ class _RecordingShareService implements ShareService {
     required String text,
   }) async {
     return ShareOutcome.shared;
+  }
+}
+
+class _RefreshingClassroomRepository extends FakeClassroomRepository {
+  _RefreshingClassroomRepository(this.current);
+
+  Classroom current;
+  int loadCount = 0;
+
+  @override
+  Future<Classroom> getClassroom(String shareCode) async {
+    loadCount += 1;
+    return current;
   }
 }

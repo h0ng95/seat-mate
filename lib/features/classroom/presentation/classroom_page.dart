@@ -54,6 +54,11 @@ class ClassroomPage extends ConsumerWidget {
     return AppScaffold(
       actions: [
         IconButton(
+          tooltip: '교실 새로고침',
+          onPressed: () => ref.invalidate(classroomProvider(shareCode)),
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+        IconButton(
           tooltip: '링크 공유하기',
           onPressed: () => _shareClassroom(context, ref),
           icon: const Icon(Icons.ios_share_rounded),
@@ -78,6 +83,8 @@ class ClassroomPage extends ConsumerWidget {
           isViewerOwner: isViewerOwner,
           canCreateClassroom: canCreateClassroom,
         ),
+        skipLoadingOnRefresh: true,
+        skipError: classroomState.hasValue,
       ),
     );
   }
