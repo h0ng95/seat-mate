@@ -73,6 +73,8 @@ class _JoinClassroomFormState extends ConsumerState<JoinClassroomForm> {
     final errorMessage = switch (error) {
       ClassroomFullException() => '방금 마지막 자리가 찼어요. 내 반을 새로 만들어볼까요?',
       ClassroomNotFoundException() => '교실을 찾지 못했어요. 링크를 다시 확인해 주세요.',
+      ClassroomJoinPersistenceException(:final diagnosticMessage) =>
+        '자리 저장에 실패했어요.\n오류: $diagnosticMessage',
       _ when error != null => '자리를 찾는 중 문제가 생겼어요. 다시 시도해 주세요.',
       _ => null,
     };

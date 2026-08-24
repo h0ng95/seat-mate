@@ -216,7 +216,7 @@ class SupabaseClassroomRepository implements ClassroomRepository {
         if (error.message.contains('CLASSROOM_CHANGED') && attempt < 2) {
           continue;
         }
-        throw _mapException(error, command.shareCode);
+        throw _mapJoinException(error, command.shareCode);
       }
     }
     throw StateError('최신 교실 자리 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
@@ -291,6 +291,17 @@ class SupabaseClassroomRepository implements ClassroomRepository {
       return ClassroomNotFoundException(shareCode);
     }
     return error;
+  }
+
+  Object _mapJoinException(PostgrestException error, String shareCode) {
+    final mapped = _mapException(error, shareCode);
+    if (mapped is! PostgrestException) return mapped;
+    final rawDetails = error.details;
+    return ClassroomJoinPersistenceException(
+      code: error.code ?? 'UNKNOWN',
+      message: error.message,
+      details: rawDetails?.toString(),
+    );
   }
 
   RelationshipType _relationshipFromCode(String code) {

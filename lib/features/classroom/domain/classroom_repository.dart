@@ -64,3 +64,21 @@ class ClassroomAlreadyExistsException implements Exception {
 
   final String? shareCode;
 }
+
+class ClassroomJoinPersistenceException implements Exception {
+  const ClassroomJoinPersistenceException({
+    required this.code,
+    required this.message,
+    this.details,
+  });
+
+  final String code;
+  final String message;
+  final String? details;
+
+  String get diagnosticMessage => [
+    code,
+    message,
+    if (details != null && details!.isNotEmpty) details!,
+  ].join(' · ');
+}
